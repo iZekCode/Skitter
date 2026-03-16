@@ -35,7 +35,7 @@ enum RoachEntity {
             mode: .trigger,
             filter: CollisionFilter(
                 group: CollisionGroups.roach,
-                mask: [CollisionGroups.ball, CollisionGroups.obstacle]
+                mask: [CollisionGroups.ball, CollisionGroups.obstacle, CollisionGroups.roach]
             )
         ))
 
