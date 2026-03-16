@@ -3,23 +3,29 @@ import RealityKit
 import simd
 
 /// Wraps CMMotionManager to translate device tilt into ball velocity.
-/// Falls back to a manual input mode when gyro is unavailable (Simulator).
+///
+/// Captures the phone's position at game start as "neutral". Tilt is measured
+/// relative to that position — so the player can hold the phone at any
+/// comfortable angle (like a normal landscape gaming grip).
+///
+/// Falls back to drag gesture input when gyro is unavailable (Simulator).
 class MotionController: ObservableObject {
     private let motionManager = CMMotionManager()
-    private var baselineAttitude: CMAttitude?
     private weak var ball: ModelEntity?
 
-    let sensitivity: Float = 15.0
+    /// Baseline gravity captured at game start — this is the "zero tilt" position
+    private var baselineGravity: SIMD2<Float>?
+
+    let sensitivity: Float = 18.0
     let maxSpeed: Float = 20.0
+
+    /// Dead zone — ignore tiny tilts near neutral position
+    let deadZone: Float = 0.03
 
     /// Whether real gyro is available
     var isGyroAvailable: Bool {
         motionManager.isDeviceMotionAvailable
     }
-
-    // Simulator fallback: accumulated simulated tilt
-    @Published var simulatedPitch: Float = 0
-    @Published var simulatedRoll: Float = 0
 
     func attach(to ball: ModelEntity) {
         self.ball = ball
@@ -31,82 +37,96 @@ class MotionController: ObservableObject {
             return
         }
 
+        // Reset baseline so it captures fresh on first reading
+        baselineGravity = nil
+
         motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
         motionManager.startDeviceMotionUpdates(
             using: .xArbitraryZVertical,
             to: .main
         ) { [weak self] motion, error in
             guard let self = self, let motion = motion else { return }
-
-            // Capture baseline on first reading
-            if self.baselineAttitude == nil {
-                self.baselineAttitude = motion.attitude.copy() as? CMAttitude
-            }
-
-            // Make attitude relative to baseline
-            if let baseline = self.baselineAttitude {
-                motion.attitude.multiply(byInverseOf: baseline)
-            }
-
-            let pitch = Float(motion.attitude.pitch)
-            let roll = Float(motion.attitude.roll)
-
-            self.applyForce(pitch: pitch, roll: roll)
+            self.applyGravityInput(gravity: motion.gravity)
         }
     }
 
     func stopMotionUpdates() {
         motionManager.stopDeviceMotionUpdates()
-        baselineAttitude = nil
+        baselineGravity = nil
     }
 
+    /// Reset the neutral position to the current phone orientation
     func recalibrate() {
-        baselineAttitude = nil
+        baselineGravity = nil
     }
 
     /// Apply simulated input (for Simulator / touch drag)
     func applySimulatedInput(dx: Float, dz: Float) {
         guard let ball = ball else { return }
 
-        var motion = ball.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
+        let motion = ball.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
         var velocity = motion.linearVelocity
         velocity.x += dx * sensitivity * 0.5
         velocity.z += dz * sensitivity * 0.5
         velocity.y = 0
 
-        // Clamp speed
-        let speed = length(SIMD2<Float>(velocity.x, velocity.z))
-        if speed > maxSpeed {
-            let scale = maxSpeed / speed
-            velocity.x *= scale
-            velocity.z *= scale
-        }
-
-        motion.linearVelocity = velocity
-        ball.components[PhysicsMotionComponent.self] = motion
+        clampAndApply(velocity: velocity, to: ball)
     }
 
-    private func applyForce(pitch: Float, roll: Float) {
+    /// Map gravity delta (from baseline) to ball velocity.
+    ///
+    /// On first call, captures current gravity as baseline.
+    /// Subsequent calls compute tilt as difference from baseline.
+    ///
+    /// In landscape RIGHT:
+    /// - gravity.x → forward/backward axis
+    /// - gravity.y → left/right axis
+    private func applyGravityInput(gravity: CMAcceleration) {
         guard let ball = ball else { return }
 
-        let fx = sin(roll) * sensitivity
-        let fz = -sin(pitch) * sensitivity  // Negative because tilt forward = move toward -z in landscape
+        let currentGravity = SIMD2<Float>(Float(gravity.x), Float(gravity.y))
 
-        var motion = ball.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
-        var velocity = motion.linearVelocity
-        velocity.x += fx * (1.0 / 60.0) * sensitivity
-        velocity.z += fz * (1.0 / 60.0) * sensitivity
-        velocity.y = 0
-
-        // Clamp speed
-        let speed = length(SIMD2<Float>(velocity.x, velocity.z))
-        if speed > maxSpeed {
-            let scale = maxSpeed / speed
-            velocity.x *= scale
-            velocity.z *= scale
+        // Capture baseline on first reading (= current phone position is "neutral")
+        if baselineGravity == nil {
+            baselineGravity = currentGravity
         }
 
-        motion.linearVelocity = velocity
+        guard let baseline = baselineGravity else { return }
+
+        // Tilt = how much gravity has shifted from the baseline position
+        var tiltForward = currentGravity.x - baseline.x   // Delta on forward/back axis
+        var tiltRight   = -(currentGravity.y - baseline.y) // Delta on left/right axis
+
+        // Apply dead zone
+        if abs(tiltForward) < deadZone { tiltForward = 0 }
+        if abs(tiltRight) < deadZone { tiltRight = 0 }
+
+        // Map tilt delta to target velocity
+        let targetVx = tiltRight * sensitivity
+        let targetVz = -tiltForward * sensitivity  // -Z is "forward" in our arena
+
+        // Smooth interpolation for responsive but not jarring feel
+        let smoothing: Float = 0.15
+        let motion = ball.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
+        var velocity = motion.linearVelocity
+        velocity.x += (targetVx - velocity.x) * smoothing
+        velocity.z += (targetVz - velocity.z) * smoothing
+        velocity.y = 0
+
+        clampAndApply(velocity: velocity, to: ball)
+    }
+
+    private func clampAndApply(velocity: SIMD3<Float>, to ball: ModelEntity) {
+        var v = velocity
+        let speed = length(SIMD2<Float>(v.x, v.z))
+        if speed > maxSpeed {
+            let scale = maxSpeed / speed
+            v.x *= scale
+            v.z *= scale
+        }
+
+        var motion = ball.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
+        motion.linearVelocity = v
         ball.components[PhysicsMotionComponent.self] = motion
     }
 }
