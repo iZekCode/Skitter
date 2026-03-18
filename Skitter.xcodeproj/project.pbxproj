@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		278B6B732F6AA0CF00ACA438 /* roachType1_raw.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 278B6B702F6AA0CF00ACA438 /* roachType1_raw.usdz */; };
+		278B6B742F6AA0CF00ACA438 /* roachType2_raw.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 278B6B712F6AA0CF00ACA438 /* roachType2_raw.usdz */; };
+		278B6B752F6AA0CF00ACA438 /* roachType3_raw.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 278B6B722F6AA0CF00ACA438 /* roachType3_raw.usdz */; };
 		AA000001 /* SkitterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000001 /* SkitterApp.swift */; };
 		AA000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000002 /* AppState.swift */; };
 		AA000003 /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003 /* GameState.swift */; };
@@ -25,6 +28,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		278B6B702F6AA0CF00ACA438 /* roachType1_raw.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roachType1_raw.usdz; sourceTree = "<group>"; };
+		278B6B712F6AA0CF00ACA438 /* roachType2_raw.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roachType2_raw.usdz; sourceTree = "<group>"; };
+		278B6B722F6AA0CF00ACA438 /* roachType3_raw.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roachType3_raw.usdz; sourceTree = "<group>"; };
 		AB000001 /* SkitterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkitterApp.swift; sourceTree = "<group>"; };
 		AB000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		AB000003 /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
@@ -55,6 +61,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		27F7FE7A2F6A90460025771D /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				278B6B702F6AA0CF00ACA438 /* roachType1_raw.usdz */,
+				278B6B712F6AA0CF00ACA438 /* roachType2_raw.usdz */,
+				278B6B722F6AA0CF00ACA438 /* roachType3_raw.usdz */,
+			);
+			path = Assets;
+			sourceTree = "<group>";
+		};
 		AE000001 = {
 			isa = PBXGroup;
 			children = (
@@ -66,6 +82,7 @@
 		AE000002 /* Skitter */ = {
 			isa = PBXGroup;
 			children = (
+				27F7FE7A2F6A90460025771D /* Assets */,
 				AE000003 /* App */,
 				AE000004 /* Game */,
 				AE000005 /* Systems */,
@@ -200,6 +217,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				278B6B732F6AA0CF00ACA438 /* roachType1_raw.usdz in Resources */,
+				278B6B742F6AA0CF00ACA438 /* roachType2_raw.usdz in Resources */,
+				278B6B752F6AA0CF00ACA438 /* roachType3_raw.usdz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

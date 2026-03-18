@@ -260,6 +260,9 @@ struct GameView: View {
     // MARK: - Game Logic
 
     private func beginGame() {
+        // Preload roach USDZ template FIRST — subsequent spawns just clone it
+        RoachEntity.preload()
+        
         // Register ECS system
         RoachAISystem.registerSystem()
         RoachComponent.registerComponent()
