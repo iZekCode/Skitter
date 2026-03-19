@@ -85,10 +85,7 @@ struct GameView: View {
                     .foregroundStyle(Color(red: 0.9, green: 0.2, blue: 0.2))
                     .kerning(8)
 
-                HStack(spacing: 20) {
-                    statCard(title: "SURVIVED", value: gameState.formattedTime)
-                    statCard(title: "CRUSHED", value: "\(gameState.crushedCount)")
-                }
+                statCard(title: "SURVIVED", value: gameState.formattedTime)
 
                 HStack(spacing: 16) {
                     Button(action: {
@@ -104,10 +101,7 @@ struct GameView: View {
                     }
 
                     Button(action: {
-                        appState.endGame(
-                            survivedTime: gameState.elapsedTime,
-                            crushedCount: gameState.crushedCount
-                        )
+                        appState.endGame(survivedTime: gameState.elapsedTime)
                     }) {
                         Text("MENU")
                             .font(.system(size: 14, weight: .semibold, design: .monospaced))

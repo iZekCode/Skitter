@@ -7,9 +7,9 @@ class RoachAISystem: System {
     static let query = EntityQuery(where: .has(RoachComponent.self))
 
     /// Minimum distance before roaches push apart
-    private static let separationRadius: Float = 1.2
+    private static let separationRadius: Float = 6.0
     /// How strongly roaches repel each other (higher = stronger push)
-    private static let separationStrength: Float = 3.0
+    private static let separationStrength: Float = 8.0
 
     required init(scene: RealityKit.Scene) {}
 

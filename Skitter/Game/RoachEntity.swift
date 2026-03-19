@@ -5,7 +5,13 @@ import UIKit
 enum RoachEntity {
     static let floorOffset: Float = 0.1
     static let chaserScale: Float = 10
-    static let collisionRadius: Float = 0.35
+    
+    // Capsule dimensions — should roughly match the roach visual body at scale 10.
+    // Height = total capsule length (head to tail).
+    // Radius = half the body width.
+    // Tweak these if the hitbox still feels off.
+    static let collisionCapsuleRadius: Float = 0.25 * chaserScale
+    static let collisionCapsuleHeight: Float = 0.5 * chaserScale
 
     // -------------------------------------------------------------------------
     // MARK: - Template cache
@@ -18,7 +24,7 @@ enum RoachEntity {
         guard chaserTemplate == nil else { return }
         if let scene = try? Entity.load(named: "roachType1_raw") {
             scene.scale = SIMD3<Float>(repeating: chaserScale)
-            let flatten = simd_quatf(angle: 0,       axis: SIMD3<Float>(1, 0, 0))
+            let flatten = simd_quatf(angle: 0, axis: SIMD3<Float>(1, 0, 0))
             let facing  = simd_quatf(angle: -.pi / 2, axis: SIMD3<Float>(0, 1, 0))
             scene.orientation = facing * flatten
             chaserTemplate = scene
@@ -46,12 +52,18 @@ enum RoachEntity {
         }
 
         container.components.set(PhysicsBodyComponent(mode: .kinematic))
+        
+        // Capsule aligned along Z (the roach's forward/back axis).
+        // This covers the full body length — head AND tail trigger the hit,
+        // not just the center like a single small sphere.
         container.components.set(CollisionComponent(
-            shapes: [.generateSphere(radius: collisionRadius)],
+            shapes: [
+                .generateCapsule(height: collisionCapsuleHeight, radius: collisionCapsuleRadius)
+            ],
             mode: .trigger,
             filter: CollisionFilter(
                 group: CollisionGroups.roach,
-                mask: [CollisionGroups.ball, CollisionGroups.obstacle, CollisionGroups.roach]
+                mask: [CollisionGroups.ball]
             )
         ))
         container.components.set(PhysicsMotionComponent())

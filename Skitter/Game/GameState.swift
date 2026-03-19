@@ -12,7 +12,6 @@ enum GamePhase: Equatable {
 class GameState {
     var gamePhase: GamePhase = .countdown
     var elapsedTime: TimeInterval = 0
-    var crushedCount: Int = 0
     var isGameOver: Bool = false
     var ballSpeed: Float = 0
 
@@ -28,14 +27,9 @@ class GameState {
         return String(format: "%02d:%02d", minutes, seconds)
     }
 
-    var formattedCrushed: String {
-        return String(format: "CRUSHED %03d", crushedCount)
-    }
-
     func startGame() {
         gamePhase = .playing
         elapsedTime = 0
-        crushedCount = 0
         isGameOver = false
         startDate = Date()
 
@@ -43,10 +37,6 @@ class GameState {
             guard let self = self, !self.isGameOver else { return }
             self.elapsedTime = Date().timeIntervalSince(self.startDate ?? Date())
         }
-    }
-
-    func crushRoach() {
-        crushedCount += 1
     }
 
     func triggerGameOver() {
@@ -62,7 +52,6 @@ class GameState {
         gameTimer = nil
         gamePhase = .countdown
         elapsedTime = 0
-        crushedCount = 0
         isGameOver = false
         ballSpeed = 0
         startDate = nil

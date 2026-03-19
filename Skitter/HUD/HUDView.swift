@@ -8,15 +8,6 @@ struct HUDView: View {
         VStack {
             // Top bar
             HStack {
-                // Crushed counter — left
-                Text(gameState.formattedCrushed)
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Color(red: 0.9, green: 0.25, blue: 0.2))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.black.opacity(0.5))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-
                 Spacer()
 
                 // Timer — center
@@ -50,7 +41,7 @@ struct HUDView: View {
 
     private var crushSpeedIndicator: some View {
         let speed = gameState.ballSpeed
-        let threshold: Float = 6.0  // Match chaser crush threshold
+        let threshold: Float = 6.0 
         let canCrush = speed >= threshold
 
         return HStack(spacing: 4) {

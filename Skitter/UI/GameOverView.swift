@@ -31,11 +31,6 @@ struct GameOverView: View {
                         icon: "clock"
                     )
                     statCard(
-                        title: "CRUSHED",
-                        value: "\(appState.lastCrushedCount)",
-                        icon: "ant"
-                    )
-                    statCard(
                         title: "BEST",
                         value: formatTime(appState.bestTime),
                         icon: "trophy"

@@ -10,7 +10,6 @@ enum Screen: Equatable {
 class AppState {
     var currentScreen: Screen = .menu
     var lastSurvivedTime: TimeInterval = 0
-    var lastCrushedCount: Int = 0
 
     var bestTime: TimeInterval {
         get { UserDefaults.standard.double(forKey: "bestTime") }
@@ -21,9 +20,8 @@ class AppState {
         currentScreen = .playing
     }
 
-    func endGame(survivedTime: TimeInterval, crushedCount: Int) {
+    func endGame(survivedTime: TimeInterval) {
         lastSurvivedTime = survivedTime
-        lastCrushedCount = crushedCount
         if survivedTime > bestTime {
             bestTime = survivedTime
         }
