@@ -1,5 +1,6 @@
 import SwiftUI
 import RealityKit
+import Combine
 import simd
 
 /// Main game screen: RealityView + HUD overlay
@@ -16,11 +17,12 @@ struct GameView: View {
     @State private var showCountdown = true
     @State private var countdownValue = 3
 
+    // Stored so SceneEvents.Update can drive the camera every frame
+    @State private var cameraEntity: PerspectiveCamera?
+    @State private var sceneUpdateSubscription: (any Cancellable)?
+
     // Tracks the camera's current yaw so we can slerp smoothly
     @State private var cameraYaw: Float = 0
-
-    // Drag state for simulator fallback
-    @State private var dragVelocity: CGSize = .zero
 
     var body: some View {
         ZStack {
@@ -30,7 +32,10 @@ struct GameView: View {
 
             // HUD overlay
             if !showCountdown {
-                HUDView(gameState: gameState, labelState: bagTriggerSystem?.labelState ?? BagTriggerLabelState())
+                HUDView(
+                    gameState: gameState,
+                    labelState: bagTriggerSystem?.labelState ?? BagTriggerLabelState()
+                )
             }
 
             // Countdown overlay
@@ -142,6 +147,8 @@ struct GameView: View {
     // MARK: - Scene Setup
 
     private var realityViewScene: some View {
+        // update: closure intentionally left empty — per-frame work happens in
+        // the SceneEvents.Update subscription set up inside beginGame().
         RealityView { content in
 
             // ── Physics root ─────────────────────────────────────────────────
@@ -163,21 +170,21 @@ struct GameView: View {
             motionController.attach(to: player)
 
             // ── Camera ───────────────────────────────────────────────────────
-            // Positioned at the playerEye anchor on first frame;
-            // updateCamera() takes over every frame after that.
             let camera = PerspectiveCamera()
             camera.name = "gameCamera"
-            camera.camera.fieldOfViewInDegrees = 75  // claustrophobic but playable
+            camera.camera.fieldOfViewInDegrees = 75
 
             if let eye = player.findEntity(named: "playerEye") {
                 camera.position = eye.position(relativeTo: nil)
             } else {
                 camera.position = player.position + SIMD3<Float>(0, PlayerEntity.eyeHeight, 0)
             }
-
-            // Face forward (−Z in RealityKit is "into the screen")
             camera.orientation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
             physicsRoot.addChild(camera)
+
+            // Store reference so the per-frame subscription can access it
+            // without searching the scene hierarchy every tick.
+            self.cameraEntity = camera
 
             // ── Lighting ─────────────────────────────────────────────────────
             let directionalLight = Entity()
@@ -192,7 +199,6 @@ struct GameView: View {
             )
             physicsRoot.addChild(directionalLight)
 
-            // Dim reddish point light — burning trash pile mood
             let pointLight1 = Entity()
             pointLight1.name = "pointLight1"
             pointLight1.components.set(PointLightComponent(
@@ -203,7 +209,6 @@ struct GameView: View {
             pointLight1.position = SIMD3<Float>(-15, 8, -10)
             physicsRoot.addChild(pointLight1)
 
-            // Green gas point light
             let pointLight2 = Entity()
             pointLight2.name = "pointLight2"
             pointLight2.components.set(PointLightComponent(
@@ -218,28 +223,25 @@ struct GameView: View {
             if let scene = physicsRoot.scene {
                 gameState.scene = scene
             }
+        }
+        // No update: closure needed — SceneEvents.Update handles per-frame work.
+    }
 
-        } update: { content in
-            self.updateCamera(content: content)
+    // MARK: - Per-frame Camera Update (driven by SceneEvents.Update)
+
+    /// Subscribes to RealityKit's per-frame scene update so the camera
+    /// tracks the player every single render tick, not just on SwiftUI redraws.
+    private func subscribeToSceneUpdates(scene: RealityKit.Scene) {
+        sceneUpdateSubscription = scene.subscribe(to: SceneEvents.Update.self) { [self] _ in
+            self.tickCameraAndHUD()
         }
     }
 
-    // MARK: - Camera Update (called every frame)
+    private func tickCameraAndHUD() {
+        guard let player = playerEntity,
+              let camera = cameraEntity else { return }
 
-    private func updateCamera(content: some RealityViewContentProtocol) {
-        guard let player = playerEntity else { return }
-
-        // Find camera entity
-        var cameraEntity: Entity?
-        for entity in content.entities {
-            if let found = entity.findEntity(named: "gameCamera") {
-                cameraEntity = found
-                break
-            }
-        }
-        guard let camera = cameraEntity else { return }
-
-        // ── Position: stick to eye anchor ────────────────────────────────────
+        // ── Position: stick camera to eye anchor ─────────────────────────────
         let eyeWorldPos: SIMD3<Float>
         if let eye = player.findEntity(named: "playerEye") {
             eyeWorldPos = eye.position(relativeTo: nil)
@@ -249,31 +251,24 @@ struct GameView: View {
         camera.position = eyeWorldPos
 
         // ── Orientation: face direction of movement ───────────────────────────
-        // Read the player's current horizontal velocity.
-        // If the player is moving, smoothly rotate the camera to face that way.
-        // If standing still, hold the last known facing direction.
         if let motion = player.components[PhysicsMotionComponent.self] {
             let vel = motion.linearVelocity
             let moveDir = SIMD2<Float>(vel.x, vel.z)
             let moveSpeed = length(moveDir)
 
-            // Update ball speed readout in HUD
+            // Update HUD values — safe to write from this closure (main thread)
             gameState.ballSpeed = length(vel)
             gameState.playerPosition = player.position(relativeTo: nil)
 
-            // Only rotate when moving meaningfully — avoids jitter when nearly still
             if moveSpeed > 0.5 {
-                // atan2(x, z) gives yaw angle in RealityKit's coordinate system
-                // (−Z is forward, +X is right)
                 let targetYaw = atan2(vel.x, vel.z) + .pi
 
-                // Shortest-path lerp on the angle to avoid 360° snapping
+                // Shortest-path lerp to avoid 360° snapping
                 var delta = targetYaw - cameraYaw
-                // Wrap delta to [−π, π]
-                if delta > .pi  { delta -= 2 * .pi }
+                if delta >  .pi { delta -= 2 * .pi }
                 if delta < -.pi { delta += 2 * .pi }
 
-                let smoothing: Float = 0.12  // lower = slower turn, higher = snappier
+                let smoothing: Float = 0.12
                 cameraYaw += delta * smoothing
 
                 camera.orientation = simd_quatf(
@@ -289,7 +284,7 @@ struct GameView: View {
     private var simulatorDragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
-                let dx = Float(value.velocity.width) / 2000.0
+                let dx = Float(value.velocity.width)  / 2000.0
                 let dz = Float(value.velocity.height) / 2000.0
                 motionController.applySimulatedInput(dx: dx, dz: dz)
             }
@@ -307,28 +302,30 @@ struct GameView: View {
         gameState.startGame()
         motionController.startMotionUpdates()
 
-        // Wire up collision handling once the scene is ready
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            if let scene = playerEntity?.scene {
-                contactSystem = ContactSystem(
+            guard let scene = playerEntity?.scene else { return }
+
+            // ── Subscribe to per-frame scene updates for the camera ───────────
+            subscribeToSceneUpdates(scene: scene)
+
+            contactSystem = ContactSystem(
+                scene: scene,
+                gameState: gameState,
+                hapticManager: hapticManager
+            )
+
+            if let arenaRoot = playerEntity?.parent {
+                MysteryBagEntity.spawnAll(in: arenaRoot)
+                escalationSystem = EscalationSystem(
+                    gameState: gameState,
+                    roachParent: arenaRoot
+                )
+                bagTriggerSystem = BagTriggerSystem(
                     scene: scene,
                     gameState: gameState,
-                    hapticManager: hapticManager
+                    hapticManager: hapticManager,
+                    bagParent: arenaRoot
                 )
-                
-                if let arenaRoot = playerEntity?.parent {
-                    MysteryBagEntity.spawnAll(in: arenaRoot)
-                    escalationSystem = EscalationSystem(
-                            gameState: gameState,
-                            roachParent: arenaRoot
-                        )
-                    bagTriggerSystem = BagTriggerSystem(
-                        scene: scene,
-                        gameState: gameState,
-                        hapticManager: hapticManager,
-                        bagParent: arenaRoot
-                    )
-                }
             }
         }
 
@@ -368,6 +365,8 @@ struct GameView: View {
 
     private func cleanup() {
         motionController.stopMotionUpdates()
+        sceneUpdateSubscription?.cancel()
+        sceneUpdateSubscription = nil
         contactSystem?.cancel()
         contactSystem = nil
         bagTriggerSystem?.cancel()
