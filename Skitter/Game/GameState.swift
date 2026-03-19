@@ -14,6 +14,12 @@ class GameState {
     var elapsedTime: TimeInterval = 0
     var isGameOver: Bool = false
     var ballSpeed: Float = 0
+    
+    var playerPosition: SIMD3<Float> = .zero
+    
+    var baitTriggeredCount: Int = 0
+    var bagsRemaining: Int = 5
+    var isWin: Bool = false
 
     // Track the RealityKit scene for system access
     weak var scene: RealityKit.Scene?
@@ -38,6 +44,14 @@ class GameState {
             self.elapsedTime = Date().timeIntervalSince(self.startDate ?? Date())
         }
     }
+    
+    func triggerWin() {
+        guard !isWin else { return }
+        isWin = true
+        gamePhase = .gameOver
+        gameTimer?.invalidate()
+        gameTimer = nil
+    }
 
     func triggerGameOver() {
         guard !isGameOver else { return }
@@ -55,5 +69,8 @@ class GameState {
         isGameOver = false
         ballSpeed = 0
         startDate = nil
+        baitTriggeredCount = 0
+        bagsRemaining = 5
+        isWin = false
     }
 }

@@ -15,7 +15,7 @@ class RoachAISystem: System {
 
     func update(context: SceneUpdateContext) {
         // Find the ball
-        guard let ball = context.scene.findEntity(named: "ball") else { return }
+        guard let ball = context.scene.findEntity(named: "player") else { return }
         let ballPos = ball.position(relativeTo: nil)
 
         // Collect all roach positions first for separation calculation

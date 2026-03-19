@@ -1,5 +1,6 @@
 import SwiftUI
 import RealityKit
+import simd
 
 /// Main game screen: RealityView + HUD overlay
 struct GameView: View {
@@ -7,11 +8,16 @@ struct GameView: View {
     @State private var gameState = GameState()
     @State private var motionController = MotionController()
     @State private var hapticManager = HapticManager()
-    @State private var crushSystem: CrushSystem?
-    @State private var ballEntity: ModelEntity?
+    @State private var contactSystem: ContactSystem?
+    @State private var bagTriggerSystem: BagTriggerSystem?
+    @State private var escalationSystem: EscalationSystem?
+    @State private var playerEntity: ModelEntity?
     @State private var roachSpawnTimer: Timer?
     @State private var showCountdown = true
     @State private var countdownValue = 3
+
+    // Tracks the camera's current yaw so we can slerp smoothly
+    @State private var cameraYaw: Float = 0
 
     // Drag state for simulator fallback
     @State private var dragVelocity: CGSize = .zero
@@ -24,7 +30,7 @@ struct GameView: View {
 
             // HUD overlay
             if !showCountdown {
-                HUDView(gameState: gameState)
+                HUDView(gameState: gameState, labelState: bagTriggerSystem?.labelState ?? BagTriggerLabelState())
             }
 
             // Countdown overlay
@@ -88,9 +94,7 @@ struct GameView: View {
                 statCard(title: "SURVIVED", value: gameState.formattedTime)
 
                 HStack(spacing: 16) {
-                    Button(action: {
-                        restartGame()
-                    }) {
+                    Button(action: { restartGame() }) {
                         Text("PLAY AGAIN")
                             .font(.system(size: 16, weight: .bold, design: .monospaced))
                             .foregroundStyle(.black)
@@ -139,7 +143,8 @@ struct GameView: View {
 
     private var realityViewScene: some View {
         RealityView { content in
-            // Configure physics
+
+            // ── Physics root ─────────────────────────────────────────────────
             let physicsRoot = Entity()
             physicsRoot.name = "physicsRoot"
             var physicsSimulation = PhysicsSimulationComponent()
@@ -147,32 +152,38 @@ struct GameView: View {
             physicsRoot.components.set(physicsSimulation)
             content.add(physicsRoot)
 
-            // Arena
+            // ── Arena ────────────────────────────────────────────────────────
             let arena = ArenaBuilder.buildArena()
             physicsRoot.addChild(arena)
 
-            // Ball
-            let ball = BallEntity.create()
-            physicsRoot.addChild(ball)
-            self.ballEntity = ball
-            motionController.attach(to: ball)
+            // ── Player ───────────────────────────────────────────────────────
+            let player = PlayerEntity.create()
+            physicsRoot.addChild(player)
+            self.playerEntity = player
+            motionController.attach(to: player)
 
-            // Camera (isometric perspective)
+            // ── Camera ───────────────────────────────────────────────────────
+            // Positioned at the playerEye anchor on first frame;
+            // updateCamera() takes over every frame after that.
             let camera = PerspectiveCamera()
             camera.name = "gameCamera"
-            camera.camera.fieldOfViewInDegrees = 50
+            camera.camera.fieldOfViewInDegrees = 75  // claustrophobic but playable
 
-            // Position above and behind, looking down at ~45°
-            let cameraOffset = SIMD3<Float>(0, 35, 35)
-            camera.position = ball.position + cameraOffset
-            camera.look(at: ball.position, from: camera.position, relativeTo: nil)
+            if let eye = player.findEntity(named: "playerEye") {
+                camera.position = eye.position(relativeTo: nil)
+            } else {
+                camera.position = player.position + SIMD3<Float>(0, PlayerEntity.eyeHeight, 0)
+            }
+
+            // Face forward (−Z in RealityKit is "into the screen")
+            camera.orientation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
             physicsRoot.addChild(camera)
 
-            // Lighting
+            // ── Lighting ─────────────────────────────────────────────────────
             let directionalLight = Entity()
             directionalLight.name = "directionalLight"
             directionalLight.components.set(DirectionalLightComponent(
-                color: UIColor(red: 0.15, green: 0.1, blue: 0.08, alpha: 1.0),
+                color: UIColor(red: 0.15, green: 0.10, blue: 0.08, alpha: 1.0),
                 intensity: 2000
             ))
             directionalLight.orientation = simd_quatf(
@@ -181,7 +192,7 @@ struct GameView: View {
             )
             physicsRoot.addChild(directionalLight)
 
-            // Dim reddish point light for mood
+            // Dim reddish point light — burning trash pile mood
             let pointLight1 = Entity()
             pointLight1.name = "pointLight1"
             pointLight1.components.set(PointLightComponent(
@@ -192,7 +203,7 @@ struct GameView: View {
             pointLight1.position = SIMD3<Float>(-15, 8, -10)
             physicsRoot.addChild(pointLight1)
 
-            // Green gas-like point light
+            // Green gas point light
             let pointLight2 = Entity()
             pointLight2.name = "pointLight2"
             pointLight2.components.set(PointLightComponent(
@@ -203,19 +214,22 @@ struct GameView: View {
             pointLight2.position = SIMD3<Float>(12, 6, 15)
             physicsRoot.addChild(pointLight2)
 
-            // Store scene reference for systems
+            // ── Store scene reference ─────────────────────────────────────────
             if let scene = physicsRoot.scene {
                 gameState.scene = scene
             }
+
         } update: { content in
             self.updateCamera(content: content)
         }
     }
 
-    private func updateCamera(content: some RealityViewContentProtocol) {
-        guard let ball = ballEntity else { return }
+    // MARK: - Camera Update (called every frame)
 
-        // Find camera
+    private func updateCamera(content: some RealityViewContentProtocol) {
+        guard let player = playerEntity else { return }
+
+        // Find camera entity
         var cameraEntity: Entity?
         for entity in content.entities {
             if let found = entity.findEntity(named: "gameCamera") {
@@ -225,18 +239,48 @@ struct GameView: View {
         }
         guard let camera = cameraEntity else { return }
 
-        let cameraOffset = SIMD3<Float>(0, 35, 35)
-        let targetPosition = ball.position(relativeTo: nil) + cameraOffset
+        // ── Position: stick to eye anchor ────────────────────────────────────
+        let eyeWorldPos: SIMD3<Float>
+        if let eye = player.findEntity(named: "playerEye") {
+            eyeWorldPos = eye.position(relativeTo: nil)
+        } else {
+            eyeWorldPos = player.position(relativeTo: nil) + SIMD3<Float>(0, PlayerEntity.eyeHeight, 0)
+        }
+        camera.position = eyeWorldPos
 
-        // Smooth follow
-        let smoothing: Float = 0.05
-        camera.position = camera.position + (targetPosition - camera.position) * smoothing
+        // ── Orientation: face direction of movement ───────────────────────────
+        // Read the player's current horizontal velocity.
+        // If the player is moving, smoothly rotate the camera to face that way.
+        // If standing still, hold the last known facing direction.
+        if let motion = player.components[PhysicsMotionComponent.self] {
+            let vel = motion.linearVelocity
+            let moveDir = SIMD2<Float>(vel.x, vel.z)
+            let moveSpeed = length(moveDir)
 
-        camera.look(at: ball.position(relativeTo: nil), from: camera.position, relativeTo: nil)
+            // Update ball speed readout in HUD
+            gameState.ballSpeed = length(vel)
+            gameState.playerPosition = player.position(relativeTo: nil)
 
-        // Update ball speed in game state
-        if let motion = ball.components[PhysicsMotionComponent.self] {
-            gameState.ballSpeed = length(motion.linearVelocity)
+            // Only rotate when moving meaningfully — avoids jitter when nearly still
+            if moveSpeed > 0.5 {
+                // atan2(x, z) gives yaw angle in RealityKit's coordinate system
+                // (−Z is forward, +X is right)
+                let targetYaw = atan2(vel.x, vel.z) + .pi
+
+                // Shortest-path lerp on the angle to avoid 360° snapping
+                var delta = targetYaw - cameraYaw
+                // Wrap delta to [−π, π]
+                if delta > .pi  { delta -= 2 * .pi }
+                if delta < -.pi { delta += 2 * .pi }
+
+                let smoothing: Float = 0.12  // lower = slower turn, higher = snappier
+                cameraYaw += delta * smoothing
+
+                camera.orientation = simd_quatf(
+                    angle: cameraYaw,
+                    axis: SIMD3<Float>(0, 1, 0)
+                )
+            }
         }
     }
 
@@ -245,8 +289,8 @@ struct GameView: View {
     private var simulatorDragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
-                let dx = Float(value.velocity.width) / 8000.0
-                let dz = Float(value.velocity.height) / 8000.0
+                let dx = Float(value.velocity.width) / 2000.0
+                let dz = Float(value.velocity.height) / 2000.0
                 motionController.applySimulatedInput(dx: dx, dz: dz)
             }
     }
@@ -254,31 +298,46 @@ struct GameView: View {
     // MARK: - Game Logic
 
     private func beginGame() {
-        // Preload roach USDZ template FIRST — subsequent spawns just clone it
         RoachEntity.preload()
-        
-        // Register ECS system
+
         RoachAISystem.registerSystem()
         RoachComponent.registerComponent()
+        MysteryBagComponent.registerComponent()
 
         gameState.startGame()
         motionController.startMotionUpdates()
 
-        // Setup crush system after scene is ready
+        // Wire up collision handling once the scene is ready
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            if let scene = ballEntity?.scene {
-                crushSystem = CrushSystem(scene: scene, gameState: gameState, hapticManager: hapticManager)
+            if let scene = playerEntity?.scene {
+                contactSystem = ContactSystem(
+                    scene: scene,
+                    gameState: gameState,
+                    hapticManager: hapticManager
+                )
+                
+                if let arenaRoot = playerEntity?.parent {
+                    MysteryBagEntity.spawnAll(in: arenaRoot)
+                    escalationSystem = EscalationSystem(
+                            gameState: gameState,
+                            roachParent: arenaRoot
+                        )
+                    bagTriggerSystem = BagTriggerSystem(
+                        scene: scene,
+                        gameState: gameState,
+                        hapticManager: hapticManager,
+                        bagParent: arenaRoot
+                    )
+                }
             }
         }
 
-        // Spawn roaches periodically
         spawnInitialRoaches()
         startRoachSpawning()
     }
 
     private func spawnInitialRoaches() {
-        guard let root = ballEntity?.parent else { return }
-        // Spawn 2 initial chasers
+        guard let root = playerEntity?.parent else { return }
         for _ in 0..<2 {
             let pos = RoachEntity.randomEdgePosition()
             let roach = RoachEntity.createChaser(at: pos)
@@ -287,13 +346,12 @@ struct GameView: View {
     }
 
     private func startRoachSpawning() {
-        roachSpawnTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [self] _ in
+        roachSpawnTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
             guard !gameState.isGameOver else {
                 roachSpawnTimer?.invalidate()
                 return
             }
-            guard let root = ballEntity?.parent else { return }
-
+            guard let root = playerEntity?.parent else { return }
             let pos = RoachEntity.randomEdgePosition()
             let roach = RoachEntity.createChaser(at: pos)
             root.addChild(roach)
@@ -302,11 +360,7 @@ struct GameView: View {
 
     private func restartGame() {
         cleanup()
-
-        // Clear old entities and rebuild
         gameState.reset()
-
-        // Small delay to let state reset
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             startCountdown()
         }
@@ -314,10 +368,15 @@ struct GameView: View {
 
     private func cleanup() {
         motionController.stopMotionUpdates()
-        crushSystem?.cancel()
-        crushSystem = nil
+        contactSystem?.cancel()
+        contactSystem = nil
+        bagTriggerSystem?.cancel()
+        bagTriggerSystem = nil
+        escalationSystem?.cancel()
+        escalationSystem = nil
         roachSpawnTimer?.invalidate()
         roachSpawnTimer = nil
         gameState.reset()
+        cameraYaw = 0
     }
 }
