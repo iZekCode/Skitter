@@ -64,12 +64,21 @@ enum ArenaBuilder {
         // TextureResource.load(contentsOf:) schedules an async GPU upload that
         // may not complete before the first rendered frame — this avoids that.
         if floorTexture == nil {
-            if let uiImage = UIImage(named: "floor"),
+            // UIImage(named:) only resolves Asset Catalog entries.
+            // floor.jpg is a loose bundle resource — must use Bundle.main URL.
+            let uiImage: UIImage? = {
+                if let url = Bundle.main.url(forResource: "floor", withExtension: "jpg") {
+                    return UIImage(contentsOfFile: url.path)
+                }
+                return UIImage(named: "floor") // fallback if ever moved to .xcassets
+            }()
+
+            if let uiImage,
                let cgImage = uiImage.cgImage,
                let tex = try? TextureResource(image: cgImage,
                                               options: .init(semantic: .color)) {
                 floorTexture = tex
-                print("[ArenaBuilder] ✅ Loaded floor texture via UIImage")
+                print("[ArenaBuilder] ✅ Loaded floor texture via bundle URL")
             } else {
                 print("[ArenaBuilder] ⚠️  floor.jpg not found — using solid colour")
             }
