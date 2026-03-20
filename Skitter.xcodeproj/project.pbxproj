@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		273F5D4A2F6CDA06004F5D81 /* JoystickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273F5D492F6CDA05004F5D81 /* JoystickView.swift */; };
+		273F5D4C2F6CDD8C004F5D81 /* DualThumbControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */; };
 		278B6B732F6AA0CF00ACA438 /* roachType1_raw.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 278B6B702F6AA0CF00ACA438 /* roachType1_raw.usdz */; };
 		278B6B742F6AA0CF00ACA438 /* roachType2_raw.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 278B6B712F6AA0CF00ACA438 /* roachType2_raw.usdz */; };
 		278B6B752F6AA0CF00ACA438 /* roachType3_raw.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 278B6B722F6AA0CF00ACA438 /* roachType3_raw.usdz */; };
@@ -35,6 +37,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		273F5D492F6CDA05004F5D81 /* JoystickView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoystickView.swift; sourceTree = "<group>"; };
+		273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualThumbControlView.swift; sourceTree = "<group>"; };
 		278B6B702F6AA0CF00ACA438 /* roachType1_raw.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roachType1_raw.usdz; sourceTree = "<group>"; };
 		278B6B712F6AA0CF00ACA438 /* roachType2_raw.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roachType2_raw.usdz; sourceTree = "<group>"; };
 		278B6B722F6AA0CF00ACA438 /* roachType3_raw.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roachType3_raw.usdz; sourceTree = "<group>"; };
@@ -156,6 +160,8 @@
 			isa = PBXGroup;
 			children = (
 				AB000013 /* HUDView.swift */,
+				273F5D492F6CDA05004F5D81 /* JoystickView.swift */,
+				273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */,
 				27D26A072F6C05C800723120 /* BagsRemainingView.swift */,
 				27D26A092F6C05DC00723120 /* TriggerLabelView.swift */,
 				27D26A0B2F6C05F700723120 /* MiniMapView.swift */,
@@ -264,6 +270,7 @@
 				27D269FE2F6BF2F600723120 /* PlayerEntity.swift in Sources */,
 				AA000008 /* RoachEntity.swift in Sources */,
 				AA000009 /* RoachAISystem.swift in Sources */,
+				273F5D4A2F6CDA06004F5D81 /* JoystickView.swift in Sources */,
 				27D26A022F6BFA8500723120 /* MysteryBagEntity.swift in Sources */,
 				27D26A002F6BF62C00723120 /* ContactSystem.swift in Sources */,
 				AA000011 /* MotionController.swift in Sources */,
@@ -273,6 +280,7 @@
 				AA000014 /* MainMenuView.swift in Sources */,
 				27D26A062F6C027600723120 /* EscalationSystem.swift in Sources */,
 				AA000015 /* GameOverView.swift in Sources */,
+				273F5D4C2F6CDD8C004F5D81 /* DualThumbControlView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

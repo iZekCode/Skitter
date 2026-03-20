@@ -1,132 +1,87 @@
-import CoreMotion
 import RealityKit
+import Foundation
 import simd
 
-/// Wraps CMMotionManager to translate device tilt into ball velocity.
+/// Translates joystick and look-drag input into player velocity + camera yaw.
 ///
-/// Captures the phone's position at game start as "neutral". Tilt is measured
-/// relative to that position — so the player can hold the phone at any
-/// comfortable angle (like a normal landscape gaming grip).
-///
-/// Falls back to drag gesture input when gyro is unavailable (Simulator).
+/// Owns `cameraYaw` so both the joystick (needs yaw to rotate input into world
+/// space) and the look drag (writes yaw) share the same source of truth.
+/// GameView reads `cameraYaw` every frame to orient the PerspectiveCamera.
 class MotionController: ObservableObject {
-    private let motionManager = CMMotionManager()
-    private weak var ball: ModelEntity?
 
-    /// Baseline gravity captured at game start — this is the "zero tilt" position
-    private var baselineGravity: SIMD2<Float>?
+    // MARK: - State
 
-    let sensitivity: Float = 18.0
-    let maxSpeed: Float = 20.0
+    /// Current camera yaw, radians. Written by the right-thumb look drag,
+    /// read by GameView each frame and by applyJoystickInput to keep movement
+    /// relative to where the player is looking.
+    private(set) var cameraYaw: Float = .pi   // start facing +Z ("forward" in arena)
 
-    /// Dead zone — ignore tiny tilts near neutral position
-    let deadZone: Float = 0.03
+    private weak var player: ModelEntity?
 
-    /// Whether real gyro is available
-    var isGyroAvailable: Bool {
-        motionManager.isDeviceMotionAvailable
+    // MARK: - Tuning
+
+    let moveSensitivity: Float = 18.0
+    let maxSpeed:        Float = 20.0
+    let moveSmoothing:   Float = 0.18
+
+    /// Radians per screen-point of right-thumb drag.
+    /// 0.005 ≈ full 180° turn over ~630pt — responsive but not twitchy.
+    let lookSensitivity: Float = 0.005
+
+    // MARK: - Setup
+
+    func attach(to entity: ModelEntity) {
+        player = entity
     }
 
-    func attach(to ball: ModelEntity) {
-        self.ball = ball
+    // MARK: - Look (right thumb)
+
+    /// Call each frame with the delta screen-X from the right-side drag.
+    /// Positive screenDX (drag right) → cameraYaw increases → player turns right.
+    func applyLookDelta(screenDX: Float) {
+        cameraYaw -= screenDX * lookSensitivity
     }
 
-    func startMotionUpdates() {
-        guard motionManager.isDeviceMotionAvailable else {
-            print("[MotionController] Device motion not available — using simulated input")
-            return
-        }
+    // MARK: - Movement (left thumb / joystick)
 
-        // Reset baseline so it captures fresh on first reading
-        baselineGravity = nil
-
-        motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
-        motionManager.startDeviceMotionUpdates(
-            using: .xArbitraryZVertical,
-            to: .main
-        ) { [weak self] motion, error in
-            guard let self = self, let motion = motion else { return }
-            self.applyGravityInput(gravity: motion.gravity)
-        }
-    }
-
-    func stopMotionUpdates() {
-        motionManager.stopDeviceMotionUpdates()
-        baselineGravity = nil
-    }
-
-    /// Reset the neutral position to the current phone orientation
-    func recalibrate() {
-        baselineGravity = nil
-    }
-
-    /// Apply simulated input (for Simulator / touch drag)
-    func applySimulatedInput(dx: Float, dz: Float) {
-        guard let ball = ball else { return }
-
-        let motion = ball.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
-        var velocity = motion.linearVelocity
-        velocity.x += dx * sensitivity * 0.5
-        velocity.z += dz * sensitivity * 0.5
-        velocity.y = 0
-
-        clampAndApply(velocity: velocity, to: ball)
-    }
-
-    /// Map gravity delta (from baseline) to ball velocity.
+    /// Normalised joystick axes in –1…+1:
+    ///   dx  positive = pushed right on screen
+    ///   dz  positive = pushed down on screen (= moving backward)
     ///
-    /// On first call, captures current gravity as baseline.
-    /// Subsequent calls compute tilt as difference from baseline.
-    ///
-    /// In landscape RIGHT:
-    /// - gravity.x → forward/backward axis
-    /// - gravity.y → left/right axis
-    private func applyGravityInput(gravity: CMAcceleration) {
-        guard let ball = ball else { return }
+    /// The input vector is rotated by `cameraYaw` so movement is always
+    /// relative to the camera's facing direction, not absolute world axes.
+    func applyJoystickInput(dx: Float, dz: Float) {
+        guard let player = player else { return }
 
-        let currentGravity = SIMD2<Float>(Float(gravity.x), Float(gravity.y))
+        // Decompose joystick into camera-local axes, then rotate into world space.
+        // cameraForward = (−sinθ, 0, −cosθ)
+        // cameraRight   = ( cosθ, 0, −sinθ)
+        // worldV = dx*(cameraRight) + (−dz)*(cameraForward)
+        let θ = cameraYaw
+        let targetVx = ( dx * cos(θ) + dz * sin(θ)) * moveSensitivity
+        let targetVz = (-dx * sin(θ) + dz * cos(θ)) * moveSensitivity
 
-        // Capture baseline on first reading (= current phone position is "neutral")
-        if baselineGravity == nil {
-            baselineGravity = currentGravity
-        }
-
-        guard let baseline = baselineGravity else { return }
-
-        // Tilt = how much gravity has shifted from the baseline position
-        var tiltForward = currentGravity.x - baseline.x   // Delta on forward/back axis
-        var tiltRight   = -(currentGravity.y - baseline.y) // Delta on left/right axis
-
-        // Apply dead zone
-        if abs(tiltForward) < deadZone { tiltForward = 0 }
-        if abs(tiltRight) < deadZone { tiltRight = 0 }
-
-        // Map tilt delta to target velocity
-        let targetVx = tiltRight * sensitivity
-        let targetVz = -tiltForward * sensitivity  // -Z is "forward" in our arena
-
-        // Smooth interpolation for responsive but not jarring feel
-        let smoothing: Float = 0.15
-        let motion = ball.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
+        var motion   = player.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
         var velocity = motion.linearVelocity
-        velocity.x += (targetVx - velocity.x) * smoothing
-        velocity.z += (targetVz - velocity.z) * smoothing
-        velocity.y = 0
+        velocity.x  += (targetVx - velocity.x) * moveSmoothing
+        velocity.z  += (targetVz - velocity.z) * moveSmoothing
+        velocity.y   = 0
 
-        clampAndApply(velocity: velocity, to: ball)
+        clampAndApply(velocity: velocity, to: player)
     }
 
-    private func clampAndApply(velocity: SIMD3<Float>, to ball: ModelEntity) {
+    // MARK: - Private
+
+    private func clampAndApply(velocity: SIMD3<Float>, to entity: ModelEntity) {
         var v = velocity
-        let speed = length(SIMD2<Float>(v.x, v.z))
-        if speed > maxSpeed {
-            let scale = maxSpeed / speed
-            v.x *= scale
-            v.z *= scale
+        let lateral = length(SIMD2<Float>(v.x, v.z))
+        if lateral > maxSpeed {
+            let s = maxSpeed / lateral
+            v.x *= s
+            v.z *= s
         }
-
-        var motion = ball.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
+        var motion = entity.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
         motion.linearVelocity = v
-        ball.components[PhysicsMotionComponent.self] = motion
+        entity.components[PhysicsMotionComponent.self] = motion
     }
 }

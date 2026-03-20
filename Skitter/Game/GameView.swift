@@ -3,34 +3,43 @@ import RealityKit
 import Combine
 import simd
 
-/// Main game screen: RealityView + HUD overlay
+/// Main game screen: RealityKit scene + HUD + dual-thumb controls overlay
 struct GameView: View {
     @Environment(AppState.self) private var appState
-    @State private var gameState = GameState()
+    @State private var gameState        = GameState()
     @State private var motionController = MotionController()
-    @State private var hapticManager = HapticManager()
-    @State private var contactSystem: ContactSystem?
-    @State private var bagTriggerSystem: BagTriggerSystem?
-    @State private var escalationSystem: EscalationSystem?
-    @State private var playerEntity: ModelEntity?
-    @State private var roachSpawnTimer: Timer?
-    @State private var showCountdown = true
-    @State private var countdownValue = 3
+    @State private var hapticManager    = HapticManager()
+    @State private var contactSystem:     ContactSystem?
+    @State private var bagTriggerSystem:  BagTriggerSystem?
+    @State private var escalationSystem:  EscalationSystem?
+    @State private var playerEntity:      ModelEntity?
+    @State private var roachSpawnTimer:   Timer?
+    @State private var showCountdown      = true
+    @State private var countdownValue     = 3
 
-    // Stored so SceneEvents.Update can drive the camera every frame
-    @State private var cameraEntity: PerspectiveCamera?
+    @State private var cameraEntity:           PerspectiveCamera?
     @State private var sceneUpdateSubscription: (any Cancellable)?
-
-    // Tracks the camera's current yaw so we can slerp smoothly
-    @State private var cameraYaw: Float = 0
 
     var body: some View {
         ZStack {
-            // 3D scene
+            // ── 3D scene ──────────────────────────────────────────────────────
             realityViewScene
-                .gesture(simulatorDragGesture)
 
-            // HUD overlay
+            // ── Dual-thumb control overlay ────────────────────────────────────
+            // Always present during play so touches are never swallowed by HUD
+            if !showCountdown && !gameState.isGameOver {
+                DualThumbControlView(
+                    onMovement: { dx, dz in
+                        motionController.applyJoystickInput(dx: dx, dz: dz)
+                    },
+                    onLook: { screenDX in
+                        motionController.applyLookDelta(screenDX: screenDX)
+                    }
+                )
+                .ignoresSafeArea()
+            }
+
+            // ── HUD (sits on top of controls) ─────────────────────────────────
             if !showCountdown {
                 HUDView(
                     gameState: gameState,
@@ -38,23 +47,19 @@ struct GameView: View {
                 )
             }
 
-            // Countdown overlay
+            // ── Countdown ─────────────────────────────────────────────────────
             if showCountdown {
                 countdownOverlay
             }
 
-            // Game over overlay
+            // ── Game over ─────────────────────────────────────────────────────
             if gameState.isGameOver {
                 gameOverOverlay
             }
         }
         .ignoresSafeArea()
-        .onAppear {
-            startCountdown()
-        }
-        .onDisappear {
-            cleanup()
-        }
+        .onAppear  { startCountdown() }
+        .onDisappear { cleanup() }
     }
 
     // MARK: - Countdown
@@ -72,7 +77,7 @@ struct GameView: View {
 
     private func startCountdown() {
         countdownValue = 3
-        showCountdown = true
+        showCountdown  = true
 
         Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
             countdownValue -= 1
@@ -99,7 +104,7 @@ struct GameView: View {
                 statCard(title: "SURVIVED", value: gameState.formattedTime)
 
                 HStack(spacing: 16) {
-                    Button(action: { restartGame() }) {
+                    Button { restartGame() } label: {
                         Text("PLAY AGAIN")
                             .font(.system(size: 16, weight: .bold, design: .monospaced))
                             .foregroundStyle(.black)
@@ -108,10 +113,7 @@ struct GameView: View {
                             .background(Color(red: 0.45, green: 0.65, blue: 0.25))
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
-
-                    Button(action: {
-                        appState.endGame(survivedTime: gameState.elapsedTime)
-                    }) {
+                    Button { appState.endGame(survivedTime: gameState.elapsedTime) } label: {
                         Text("MENU")
                             .font(.system(size: 14, weight: .semibold, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.6))
@@ -147,29 +149,24 @@ struct GameView: View {
     // MARK: - Scene Setup
 
     private var realityViewScene: some View {
-        // update: closure intentionally left empty — per-frame work happens in
-        // the SceneEvents.Update subscription set up inside beginGame().
         RealityView { content in
 
-            // ── Physics root ─────────────────────────────────────────────────
             let physicsRoot = Entity()
             physicsRoot.name = "physicsRoot"
-            var physicsSimulation = PhysicsSimulationComponent()
-            physicsSimulation.gravity = SIMD3<Float>(0, -9.8, 0)
-            physicsRoot.components.set(physicsSimulation)
+            var sim = PhysicsSimulationComponent()
+            sim.gravity = SIMD3<Float>(0, -9.8, 0)
+            physicsRoot.components.set(sim)
             content.add(physicsRoot)
 
-            // ── Arena ────────────────────────────────────────────────────────
             let arena = ArenaBuilder.buildArena()
             physicsRoot.addChild(arena)
 
-            // ── Player ───────────────────────────────────────────────────────
             let player = PlayerEntity.create()
             physicsRoot.addChild(player)
             self.playerEntity = player
             motionController.attach(to: player)
 
-            // ── Camera ───────────────────────────────────────────────────────
+            // Camera — initial orientation matches motionController.cameraYaw
             let camera = PerspectiveCamera()
             camera.name = "gameCamera"
             camera.camera.fieldOfViewInDegrees = 75
@@ -179,133 +176,94 @@ struct GameView: View {
             } else {
                 camera.position = player.position + SIMD3<Float>(0, PlayerEntity.eyeHeight, 0)
             }
-            camera.orientation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
+            camera.orientation = simd_quatf(
+                angle: motionController.cameraYaw,
+                axis: SIMD3<Float>(0, 1, 0)
+            )
             physicsRoot.addChild(camera)
-
-            // Store reference so the per-frame subscription can access it
-            // without searching the scene hierarchy every tick.
             self.cameraEntity = camera
 
-            // ── Lighting ─────────────────────────────────────────────────────
-            let directionalLight = Entity()
-            directionalLight.name = "directionalLight"
-            directionalLight.components.set(DirectionalLightComponent(
+            // Lighting
+            let dirLight = Entity()
+            dirLight.components.set(DirectionalLightComponent(
                 color: UIColor(red: 0.15, green: 0.10, blue: 0.08, alpha: 1.0),
                 intensity: 2000
             ))
-            directionalLight.orientation = simd_quatf(
-                angle: -.pi / 3,
-                axis: SIMD3<Float>(1, 0, 0.3)
-            )
-            physicsRoot.addChild(directionalLight)
+            dirLight.orientation = simd_quatf(angle: -.pi / 3, axis: SIMD3<Float>(1, 0, 0.3))
+            physicsRoot.addChild(dirLight)
 
-            let pointLight1 = Entity()
-            pointLight1.name = "pointLight1"
-            pointLight1.components.set(PointLightComponent(
+            let pl1 = Entity()
+            pl1.components.set(PointLightComponent(
                 color: UIColor(red: 0.8, green: 0.15, blue: 0.05, alpha: 1.0),
-                intensity: 5000,
-                attenuationRadius: 25
+                intensity: 5000, attenuationRadius: 25
             ))
-            pointLight1.position = SIMD3<Float>(-15, 8, -10)
-            physicsRoot.addChild(pointLight1)
+            pl1.position = SIMD3<Float>(-15, 8, -10)
+            physicsRoot.addChild(pl1)
 
-            let pointLight2 = Entity()
-            pointLight2.name = "pointLight2"
-            pointLight2.components.set(PointLightComponent(
+            let pl2 = Entity()
+            pl2.components.set(PointLightComponent(
                 color: UIColor(red: 0.1, green: 0.6, blue: 0.1, alpha: 1.0),
-                intensity: 3000,
-                attenuationRadius: 20
+                intensity: 3000, attenuationRadius: 20
             ))
-            pointLight2.position = SIMD3<Float>(12, 6, 15)
-            physicsRoot.addChild(pointLight2)
+            pl2.position = SIMD3<Float>(12, 6, 15)
+            physicsRoot.addChild(pl2)
 
-            // ── Store scene reference ─────────────────────────────────────────
             if let scene = physicsRoot.scene {
                 gameState.scene = scene
             }
         }
-        // No update: closure needed — SceneEvents.Update handles per-frame work.
     }
 
-    // MARK: - Per-frame Camera Update (driven by SceneEvents.Update)
+    // MARK: - Per-frame camera tick (SceneEvents.Update)
 
-    /// Subscribes to RealityKit's per-frame scene update so the camera
-    /// tracks the player every single render tick, not just on SwiftUI redraws.
     private func subscribeToSceneUpdates(scene: RealityKit.Scene) {
         sceneUpdateSubscription = scene.subscribe(to: SceneEvents.Update.self) { [self] _ in
-            self.tickCameraAndHUD()
+            tickCamera()
         }
     }
 
-    private func tickCameraAndHUD() {
+    /// Positions the camera at the player's eye anchor and applies the current
+    /// yaw from MotionController. Camera yaw is now *only* driven by right-thumb
+    /// drag — no auto-follow from velocity.
+    private func tickCamera() {
         guard let player = playerEntity,
               let camera = cameraEntity else { return }
 
-        // ── Position: stick camera to eye anchor ─────────────────────────────
-        let eyeWorldPos: SIMD3<Float>
+        // ── Position at eye anchor ────────────────────────────────────────────
+        let eyePos: SIMD3<Float>
         if let eye = player.findEntity(named: "playerEye") {
-            eyeWorldPos = eye.position(relativeTo: nil)
+            eyePos = eye.position(relativeTo: nil)
         } else {
-            eyeWorldPos = player.position(relativeTo: nil) + SIMD3<Float>(0, PlayerEntity.eyeHeight, 0)
+            eyePos = player.position(relativeTo: nil) + SIMD3<Float>(0, PlayerEntity.eyeHeight, 0)
         }
-        camera.position = eyeWorldPos
+        camera.position = eyePos
 
-        // ── Orientation: face direction of movement ───────────────────────────
+        // ── Orientation from motionController.cameraYaw ───────────────────────
+        camera.orientation = simd_quatf(
+            angle: motionController.cameraYaw,
+            axis: SIMD3<Float>(0, 1, 0)
+        )
+
+        // ── HUD state (safe — SceneEvents.Update fires on main thread) ────────
         if let motion = player.components[PhysicsMotionComponent.self] {
-            let vel = motion.linearVelocity
-            let moveDir = SIMD2<Float>(vel.x, vel.z)
-            let moveSpeed = length(moveDir)
-
-            // Update HUD values — safe to write from this closure (main thread)
-            gameState.ballSpeed = length(vel)
+            gameState.ballSpeed      = length(motion.linearVelocity)
             gameState.playerPosition = player.position(relativeTo: nil)
-
-            if moveSpeed > 0.5 {
-                let targetYaw = atan2(vel.x, vel.z) + .pi
-
-                // Shortest-path lerp to avoid 360° snapping
-                var delta = targetYaw - cameraYaw
-                if delta >  .pi { delta -= 2 * .pi }
-                if delta < -.pi { delta += 2 * .pi }
-
-                let smoothing: Float = 0.12
-                cameraYaw += delta * smoothing
-
-                camera.orientation = simd_quatf(
-                    angle: cameraYaw,
-                    axis: SIMD3<Float>(0, 1, 0)
-                )
-            }
         }
-    }
-
-    // MARK: - Simulator Drag Gesture
-
-    private var simulatorDragGesture: some Gesture {
-        DragGesture()
-            .onChanged { value in
-                let dx = Float(value.velocity.width)  / 2000.0
-                let dz = Float(value.velocity.height) / 2000.0
-                motionController.applySimulatedInput(dx: dx, dz: dz)
-            }
     }
 
     // MARK: - Game Logic
 
     private func beginGame() {
         RoachEntity.preload()
-
         RoachAISystem.registerSystem()
         RoachComponent.registerComponent()
         MysteryBagComponent.registerComponent()
 
         gameState.startGame()
-        motionController.startMotionUpdates()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             guard let scene = playerEntity?.scene else { return }
 
-            // ── Subscribe to per-frame scene updates for the camera ───────────
             subscribeToSceneUpdates(scene: scene)
 
             contactSystem = ContactSystem(
@@ -337,8 +295,7 @@ struct GameView: View {
         guard let root = playerEntity?.parent else { return }
         for _ in 0..<2 {
             let pos = RoachEntity.randomEdgePosition()
-            let roach = RoachEntity.createChaser(at: pos)
-            root.addChild(roach)
+            root.addChild(RoachEntity.createChaser(at: pos))
         }
     }
 
@@ -350,8 +307,7 @@ struct GameView: View {
             }
             guard let root = playerEntity?.parent else { return }
             let pos = RoachEntity.randomEdgePosition()
-            let roach = RoachEntity.createChaser(at: pos)
-            root.addChild(roach)
+            root.addChild(RoachEntity.createChaser(at: pos))
         }
     }
 
@@ -364,7 +320,6 @@ struct GameView: View {
     }
 
     private func cleanup() {
-        motionController.stopMotionUpdates()
         sceneUpdateSubscription?.cancel()
         sceneUpdateSubscription = nil
         contactSystem?.cancel()
@@ -376,6 +331,5 @@ struct GameView: View {
         roachSpawnTimer?.invalidate()
         roachSpawnTimer = nil
         gameState.reset()
-        cameraYaw = 0
     }
 }
