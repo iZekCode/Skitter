@@ -24,11 +24,7 @@ struct MiniMapView: View {
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
 
             // ── Arena border ─────────────────────────────────────────────────
-            let borderRect = CGRect(
-                x: 1, y: 1,
-                width: size.width - 2,
-                height: size.height - 2
-            )
+            let borderRect = CGRect(x: 1, y: 1, width: size.width - 2, height: size.height - 2)
             context.stroke(
                 Path(borderRect),
                 with: .color(.white.opacity(0.3)),
@@ -36,7 +32,8 @@ struct MiniMapView: View {
             )
 
             // ── Obstacles ────────────────────────────────────────────────────
-            for config in obstacleConfigs {
+            // Read directly from ArenaBuilder so there's only one source of truth
+            for config in ArenaBuilder.obstacleConfigs {
                 let rect = worldRectToMap(
                     x: config.position.x,
                     z: config.position.z,
@@ -69,15 +66,13 @@ struct MiniMapView: View {
 
     // MARK: - Coordinate helpers
 
-    /// Convert a world (X, Z) position to map canvas point
     private func worldToMap(x: Float, z: Float, center: CGPoint) -> CGPoint {
         CGPoint(
             x: center.x + CGFloat(x) / scale,
-            y: center.y + CGFloat(z) / scale   // Z maps to Y in top-down
+            y: center.y + CGFloat(z) / scale
         )
     }
 
-    /// Convert a world rect (obstacle) to a map canvas CGRect
     private func worldRectToMap(
         x: Float, z: Float,
         w: Float, d: Float,
@@ -87,27 +82,8 @@ struct MiniMapView: View {
         return CGRect(
             x: origin.x,
             y: origin.y,
-            width: CGFloat(w) / scale,
+            width:  CGFloat(w) / scale,
             height: CGFloat(d) / scale
         )
-    }
-
-    // MARK: - Obstacle data (mirrors ArenaBuilder)
-
-    /// Replicated here so MiniMapView has no RealityKit dependency.
-    /// Keep in sync with ArenaBuilder.createObstacles() if positions change.
-    private var obstacleConfigs: [(position: SIMD3<Float>, size: SIMD3<Float>)] {
-        [
-            (SIMD3<Float>(-12, 1.0,  -8),  SIMD3<Float>(3,   2,   3)),
-            (SIMD3<Float>( 10, 0.75,  5),  SIMD3<Float>(2.5, 1.5, 4)),
-            (SIMD3<Float>( -5, 1.2,  14),  SIMD3<Float>(4,   2.4, 2)),
-            (SIMD3<Float>( 18, 0.9, -12),  SIMD3<Float>(3,   1.8, 3)),
-            (SIMD3<Float>(-18, 0.8, -18),  SIMD3<Float>(2,   1.6, 5)),
-            (SIMD3<Float>(  8, 1.1, -20),  SIMD3<Float>(5,   2.2, 2.5)),
-            (SIMD3<Float>(-15, 0.7,  10),  SIMD3<Float>(3.5, 1.4, 3)),
-            (SIMD3<Float>( 20, 1.0,  15),  SIMD3<Float>(2.5, 2,   2.5)),
-            (SIMD3<Float>(  0, 0.6, -15),  SIMD3<Float>(2,   1.2, 2)),
-            (SIMD3<Float>( -8, 0.85, 22),  SIMD3<Float>(3,   1.7, 3)),
-        ]
     }
 }

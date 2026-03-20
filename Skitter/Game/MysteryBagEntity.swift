@@ -11,7 +11,6 @@ enum BagType {
 // MARK: - Component
 
 /// ECS component attached to every mystery bag entity.
-/// Stores the bag's hidden type and whether it has already been triggered.
 struct MysteryBagComponent: Component {
     let bagType: BagType
     var hasTriggered: Bool = false
@@ -19,69 +18,94 @@ struct MysteryBagComponent: Component {
 
 // MARK: - Factory
 
-/// Factory for the 5 identical black trash bags scattered around the arena.
-///
-/// All bags look the same — matte black kresek hitam. The player can't tell
-/// which is which until they walk into one and trigger a collision.
 enum MysteryBagEntity {
 
     // MARK: - Dimensions
 
-    /// Width of the bag mesh (X axis)
-    static let width: Float  = 1.2
-    /// Height of the bag mesh (Y axis) — crumpled bag, not tall
+    static let width:  Float = 1.2
     static let height: Float = 1.0
-    /// Depth of the bag mesh (Z axis)
-    static let depth: Float  = 0.9
+    static let depth:  Float = 0.9
 
-    /// Trigger radius — slightly larger than the mesh so the player
+    /// Trigger sphere — slightly larger than the mesh so the player
     /// "finds" the bag just before visually walking into it.
     static let triggerRadius: Float = 1.4
 
     // MARK: - Spawn rules
 
-    /// Minimum distance between any two bags
-    static let minBagSpacing: Float = 15.0
-    /// Minimum distance from the player start position (arena center)
+    static let minBagSpacing:    Float = 15.0
     static let minDistFromStart: Float = 20.0
+
+    // MARK: - Model cache
+
+    private static var bagTemplate:    Entity? = nil   // black_plastic.usdz
+    private static var baygonTemplate: Entity? = nil   // byegone.usdz    (win reveal)
+    private static var baitTemplate:   Entity? = nil   // food_pile.usdz  (bait reveal)
+
+    /// Load all three models once. Call this before the first `spawnAll()`.
+    static func preload() {
+        if bagTemplate == nil {
+            if let e = try? Entity.load(named: "black_plastic") {
+                bagTemplate = e
+                print("[MysteryBagEntity] ✅ Preloaded black_plastic.usdz")
+            } else {
+                print("[MysteryBagEntity] ⚠️  Could not load black_plastic.usdz — using fallback")
+            }
+        }
+        if baygonTemplate == nil {
+            if let e = try? Entity.load(named: "byegone") {
+                baygonTemplate = e
+                print("[MysteryBagEntity] ✅ Preloaded byegone.usdz")
+            } else {
+                print("[MysteryBagEntity] ⚠️  Could not load byegone.usdz")
+            }
+        }
+        if baitTemplate == nil {
+            if let e = try? Entity.load(named: "food_pile") {
+                baitTemplate = e
+                print("[MysteryBagEntity] ✅ Preloaded food_pile.usdz")
+            } else {
+                print("[MysteryBagEntity] ⚠️  Could not load food_pile.usdz")
+            }
+        }
+    }
 
     // MARK: - Factory
 
     /// Creates one mystery bag entity at `position`.
-    /// `bagType` is the hidden payload — unknown to the player until triggered.
-    static func create(at position: SIMD3<Float>, type bagType: BagType) -> ModelEntity {
-        let bag = ModelEntity()
+    static func create(at position: SIMD3<Float>, type bagType: BagType) -> Entity {
+        let bag  = Entity()
         bag.name = "mysteryBag"
 
-        // ── Mesh — crumpled rectangular bag ─────────────────────────────────
-        let mesh = MeshResource.generateBox(
-            width: width,
-            height: height,
-            depth: depth,
-            cornerRadius: 0.25   // soft corners — plastic bag, not a crate
-        )
+        // ── Visual child ─────────────────────────────────────────────────────
+        if let template = bagTemplate {
+            let visual = template.clone(recursive: true)
+            fitModel(visual, width: width, height: height, depth: depth)
+            bag.addChild(visual)
+        } else {
+            // Fallback: procedural dark plastic box
+            let mesh = MeshResource.generateBox(
+                width: width, height: height, depth: depth, cornerRadius: 0.25
+            )
+            var mat = PhysicallyBasedMaterial()
+            mat.baseColor = .init(tint: UIColor(red: 0.04, green: 0.04, blue: 0.04, alpha: 1.0))
+            mat.roughness = .init(floatLiteral: 0.35)
+            mat.metallic  = .init(floatLiteral: 0.0)
+            let fallback  = ModelEntity(mesh: mesh, materials: [mat])
+            // Centre the box so its bottom is at y = 0 in bag space
+            fallback.position.y = height / 2.0
+            bag.addChild(fallback)
+        }
 
-        // Matte black, slightly wet-looking (low roughness, near-zero metallic)
-        var material = PhysicallyBasedMaterial()
-        material.baseColor    = .init(tint: UIColor(red: 0.04, green: 0.04, blue: 0.04, alpha: 1.0))
-        material.roughness    = .init(floatLiteral: 0.35)   // slightly shiny — damp plastic
-        material.metallic     = .init(floatLiteral: 0.0)
-
-        bag.model = ModelComponent(mesh: mesh, materials: [material])
-
-        // Sit flush on the floor — origin is at centre of the box,
-        // so lift by half the height.
-        bag.position = SIMD3<Float>(position.x, height / 2.0, position.z)
+        // Sit flush on the floor
+        bag.position = SIMD3<Float>(position.x, 0, position.z)
 
         // ── Collision — trigger only ─────────────────────────────────────────
-        // The bag doesn't block movement; the player walks through it.
-        // BagTriggerSystem listens for CollisionEvents.Began on this shape.
         bag.components.set(CollisionComponent(
             shapes: [.generateSphere(radius: triggerRadius)],
             mode: .trigger,
             filter: CollisionFilter(
-                group: CollisionGroups.obstacle,    // reuse existing group
-                mask: [CollisionGroups.ball]        // ball = player (Phase 2 reuse)
+                group: CollisionGroups.obstacle,
+                mask:  [CollisionGroups.ball]
             )
         ))
 
@@ -91,23 +115,29 @@ enum MysteryBagEntity {
         return bag
     }
 
+    // MARK: - Reveal entity
+
+    /// Clones the reveal model (byegone or food_pile) sized to fit the bag footprint.
+    /// Returns nil if the model wasn't preloaded.
+    static func createRevealEntity(for bagType: BagType) -> Entity? {
+        let template = bagType == .baygon ? baygonTemplate : baitTemplate
+        guard let t = template else { return nil }
+
+        let reveal = t.clone(recursive: true)
+        fitModel(reveal, width: width, height: height, depth: depth)
+        return reveal
+    }
+
     // MARK: - Batch spawn
 
-    /// Spawns exactly 5 bags into `parent` — 1 baygon, 4 bait.
-    /// Placement rules:
-    ///   - No bag within `minDistFromStart` of arena center
-    ///   - No two bags within `minBagSpacing` of each other
-    ///   - Keeps trying random positions until both rules are satisfied
-    ///     (max 100 attempts per bag before giving up and placing anyway)
+    /// Spawns 5 bags into `parent` — 1 baygon, 4 bait, randomly placed.
     static func spawnAll(in parent: Entity) {
         let positions = generatePositions(count: 5)
-
-        // Shuffle so baygon index is random — not always the first one placed
         let types: [BagType] = [.baygon, .bait, .bait, .bait, .bait].shuffled()
 
         for (i, pos) in positions.enumerated() {
-            let bag = create(at: pos, type: types[i])
-            bag.name = "mysteryBag_\(i)"
+            let bag      = create(at: pos, type: types[i])
+            bag.name     = "mysteryBag_\(i)"
             parent.addChild(bag)
         }
     }
@@ -115,12 +145,12 @@ enum MysteryBagEntity {
     // MARK: - Position generation
 
     private static func generatePositions(count: Int) -> [SIMD3<Float>] {
-        let halfArena = ArenaBuilder.arenaSize / 2.0 - 4.0  // stay away from walls
+        let halfArena = ArenaBuilder.arenaSize / 2.0 - 4.0
         var placed: [SIMD3<Float>] = []
 
         for _ in 0..<count {
             var candidate = SIMD3<Float>.zero
-            var attempts = 0
+            var attempts  = 0
 
             repeat {
                 candidate = SIMD3<Float>(
@@ -133,21 +163,41 @@ enum MysteryBagEntity {
 
             placed.append(candidate)
         }
-
         return placed
     }
 
-    private static func isValidPosition(_ pos: SIMD3<Float>, against placed: [SIMD3<Float>]) -> Bool {
-        // Too close to player start (arena center)
+    private static func isValidPosition(
+        _ pos: SIMD3<Float>,
+        against placed: [SIMD3<Float>]
+    ) -> Bool {
         let distFromCenter = length(SIMD2<Float>(pos.x, pos.z))
         if distFromCenter < minDistFromStart { return false }
 
-        // Too close to another bag
         for other in placed {
             let dist = length(SIMD2<Float>(pos.x - other.x, pos.z - other.z))
             if dist < minBagSpacing { return false }
         }
-
         return true
+    }
+
+    // MARK: - Shared model-fitting helper
+
+    /// Scale entity so its height ≈ targetHeight, then shift so its bottom
+    /// sits at y = 0 in the entity's parent space.
+    private static func fitModel(
+        _ entity: Entity,
+        width:  Float,
+        height: Float,
+        depth:  Float
+    ) {
+        let rawBounds = entity.visualBounds(relativeTo: entity)
+        let rawHeight = rawBounds.extents.y
+
+        let scale: Float = rawHeight > 0.001 ? height / rawHeight : 1.0
+        entity.scale = SIMD3<Float>(repeating: scale)
+
+        // Shift so bottom sits at y = 0 in parent (bag container) space
+        let scaledMinY  = rawBounds.min.y * scale
+        entity.position = SIMD3<Float>(0, -scaledMinY, 0)
     }
 }
