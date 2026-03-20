@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		273F5D4A2F6CDA06004F5D81 /* JoystickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273F5D492F6CDA05004F5D81 /* JoystickView.swift */; };
 		273F5D4C2F6CDD8C004F5D81 /* DualThumbControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */; };
 		278B6B732F6AA0CF00ACA438 /* roachType1_raw.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 278B6B702F6AA0CF00ACA438 /* roachType1_raw.usdz */; };
 		278B6B742F6AA0CF00ACA438 /* roachType2_raw.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 278B6B712F6AA0CF00ACA438 /* roachType2_raw.usdz */; };
@@ -25,7 +24,6 @@
 		AA000003 /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003 /* GameState.swift */; };
 		AA000004 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000004 /* GameView.swift */; };
 		AA000005 /* ArenaBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000005 /* ArenaBuilder.swift */; };
-		AA000006 /* BallEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000006 /* BallEntity.swift */; };
 		AA000007 /* RoachComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000007 /* RoachComponent.swift */; };
 		AA000008 /* RoachEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000008 /* RoachEntity.swift */; };
 		AA000009 /* RoachAISystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000009 /* RoachAISystem.swift */; };
@@ -37,7 +35,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		273F5D492F6CDA05004F5D81 /* JoystickView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoystickView.swift; sourceTree = "<group>"; };
 		273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualThumbControlView.swift; sourceTree = "<group>"; };
 		278B6B702F6AA0CF00ACA438 /* roachType1_raw.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roachType1_raw.usdz; sourceTree = "<group>"; };
 		278B6B712F6AA0CF00ACA438 /* roachType2_raw.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roachType2_raw.usdz; sourceTree = "<group>"; };
@@ -55,7 +52,6 @@
 		AB000003 /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
 		AB000004 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		AB000005 /* ArenaBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaBuilder.swift; sourceTree = "<group>"; };
-		AB000006 /* BallEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallEntity.swift; sourceTree = "<group>"; };
 		AB000007 /* RoachComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoachComponent.swift; sourceTree = "<group>"; };
 		AB000008 /* RoachEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoachEntity.swift; sourceTree = "<group>"; };
 		AB000009 /* RoachAISystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoachAISystem.swift; sourceTree = "<group>"; };
@@ -128,7 +124,6 @@
 				AB000004 /* GameView.swift */,
 				AB000005 /* ArenaBuilder.swift */,
 				27D269FD2F6BF2F100723120 /* PlayerEntity.swift */,
-				AB000006 /* BallEntity.swift */,
 				27D26A012F6BFA8000723120 /* MysteryBagEntity.swift */,
 				AB000007 /* RoachComponent.swift */,
 				AB000008 /* RoachEntity.swift */,
@@ -160,7 +155,6 @@
 			isa = PBXGroup;
 			children = (
 				AB000013 /* HUDView.swift */,
-				273F5D492F6CDA05004F5D81 /* JoystickView.swift */,
 				273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */,
 				27D26A072F6C05C800723120 /* BagsRemainingView.swift */,
 				27D26A092F6C05DC00723120 /* TriggerLabelView.swift */,
@@ -264,13 +258,11 @@
 				AA000004 /* GameView.swift in Sources */,
 				27D26A082F6C05C900723120 /* BagsRemainingView.swift in Sources */,
 				AA000005 /* ArenaBuilder.swift in Sources */,
-				AA000006 /* BallEntity.swift in Sources */,
 				27D26A042F6BFAD600723120 /* BagTriggerSystem.swift in Sources */,
 				AA000007 /* RoachComponent.swift in Sources */,
 				27D269FE2F6BF2F600723120 /* PlayerEntity.swift in Sources */,
 				AA000008 /* RoachEntity.swift in Sources */,
 				AA000009 /* RoachAISystem.swift in Sources */,
-				273F5D4A2F6CDA06004F5D81 /* JoystickView.swift in Sources */,
 				27D26A022F6BFA8500723120 /* MysteryBagEntity.swift in Sources */,
 				27D26A002F6BF62C00723120 /* ContactSystem.swift in Sources */,
 				AA000011 /* MotionController.swift in Sources */,
