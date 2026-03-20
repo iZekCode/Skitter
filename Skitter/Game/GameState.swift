@@ -48,6 +48,7 @@ class GameState {
     func triggerWin() {
         guard !isWin else { return }
         isWin = true
+        isGameOver = true
         gamePhase = .gameOver
         gameTimer?.invalidate()
         gameTimer = nil

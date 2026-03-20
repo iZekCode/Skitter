@@ -4,7 +4,7 @@ import UIKit
 /// Factory for creating cockroach entities
 enum RoachEntity {
     static let floorOffset: Float = 0.1
-    static let chaserScale: Float = 10
+    static let chaserScale: Float = 5
     
     // Capsule dimensions — should roughly match the roach visual body at scale 10.
     // Height = total capsule length (head to tail).
