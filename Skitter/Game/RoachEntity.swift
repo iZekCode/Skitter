@@ -4,7 +4,7 @@ import UIKit
 /// Factory for creating cockroach entities
 enum RoachEntity {
     static let floorOffset: Float = 0.1
-    static let chaserScale: Float = 5
+    static let chaserScale: Float = 25
     
     // Capsule dimensions — should roughly match the roach visual body at scale 10.
     // Height = total capsule length (head to tail).
@@ -22,7 +22,7 @@ enum RoachEntity {
     /// Loads the USDZ a single time — all spawns after this just clone it.
     static func preload() {
         guard chaserTemplate == nil else { return }
-        if let scene = try? Entity.load(named: "roachType1_raw") {
+        if let scene = try? Entity.load(named: "roach_1") {
             scene.scale = SIMD3<Float>(repeating: chaserScale)
             let flatten = simd_quatf(angle: 0, axis: SIMD3<Float>(1, 0, 0))
             let facing  = simd_quatf(angle: -.pi / 2, axis: SIMD3<Float>(0, 1, 0))
