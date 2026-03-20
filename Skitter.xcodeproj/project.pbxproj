@@ -15,7 +15,6 @@
 		27A703072F6D57B6002F6B06 /* oil_puddle.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702F32F6D57B6002F6B06 /* oil_puddle.usdz */; };
 		27A703082F6D57B6002F6B06 /* oil_drum.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702F22F6D57B6002F6B06 /* oil_drum.usdz */; };
 		27A703092F6D57B6002F6B06 /* trash_pile.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702F82F6D57B6002F6B06 /* trash_pile.usdz */; };
-		27A7030A2F6D57B6002F6B06 /* roach_2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702F52F6D57B6002F6B06 /* roach_2.usdz */; };
 		27A7030B2F6D57B6002F6B06 /* correct.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A702FB2F6D57B6002F6B06 /* correct.wav */; };
 		27A7030C2F6D57B6002F6B06 /* gameover_lose.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A702FC2F6D57B6002F6B06 /* gameover_lose.wav */; };
 		27A7030D2F6D57B6002F6B06 /* gameover_win.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A702FD2F6D57B6002F6B06 /* gameover_win.wav */; };
@@ -23,9 +22,12 @@
 		27A7030F2F6D57B6002F6B06 /* skittering_sound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A702FE2F6D57B6002F6B06 /* skittering_sound.wav */; };
 		27A703102F6D57B6002F6B06 /* food_pile.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702F12F6D57B6002F6B06 /* food_pile.usdz */; };
 		27A703112F6D57B6002F6B06 /* wrong.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A702FF2F6D57B6002F6B06 /* wrong.wav */; };
-		27A703122F6D57B6002F6B06 /* roach_1.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702F42F6D57B6002F6B06 /* roach_1.usdz */; };
 		27A703132F6D57B6002F6B06 /* byegone.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702EF2F6D57B6002F6B06 /* byegone.usdz */; };
 		27A703142F6D57B6002F6B06 /* trash_barrel.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702F72F6D57B6002F6B06 /* trash_barrel.usdz */; };
+		27A703192F6D60AF002F6B06 /* roach_1_animated.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A703162F6D60AF002F6B06 /* roach_1_animated.usdz */; };
+		27A7031A2F6D60AF002F6B06 /* roach_2_animated.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A703182F6D60AF002F6B06 /* roach_2_animated.usdz */; };
+		27A7031B2F6D60AF002F6B06 /* roach_2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A703172F6D60AF002F6B06 /* roach_2.usdz */; };
+		27A7031C2F6D60AF002F6B06 /* roach_1.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A703152F6D60AF002F6B06 /* roach_1.usdz */; };
 		27D269FE2F6BF2F600723120 /* PlayerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D269FD2F6BF2F100723120 /* PlayerEntity.swift */; };
 		27D26A002F6BF62C00723120 /* ContactSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D269FF2F6BF62700723120 /* ContactSystem.swift */; };
 		27D26A022F6BFA8500723120 /* MysteryBagEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D26A012F6BFA8000723120 /* MysteryBagEntity.swift */; };
@@ -57,8 +59,6 @@
 		27A702F12F6D57B6002F6B06 /* food_pile.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = food_pile.usdz; sourceTree = "<group>"; };
 		27A702F22F6D57B6002F6B06 /* oil_drum.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = oil_drum.usdz; sourceTree = "<group>"; };
 		27A702F32F6D57B6002F6B06 /* oil_puddle.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = oil_puddle.usdz; sourceTree = "<group>"; };
-		27A702F42F6D57B6002F6B06 /* roach_1.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roach_1.usdz; sourceTree = "<group>"; };
-		27A702F52F6D57B6002F6B06 /* roach_2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roach_2.usdz; sourceTree = "<group>"; };
 		27A702F62F6D57B6002F6B06 /* roach_3.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roach_3.usdz; sourceTree = "<group>"; };
 		27A702F72F6D57B6002F6B06 /* trash_barrel.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = trash_barrel.usdz; sourceTree = "<group>"; };
 		27A702F82F6D57B6002F6B06 /* trash_pile.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = trash_pile.usdz; sourceTree = "<group>"; };
@@ -69,6 +69,10 @@
 		27A702FE2F6D57B6002F6B06 /* skittering_sound.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = skittering_sound.wav; sourceTree = "<group>"; };
 		27A702FF2F6D57B6002F6B06 /* wrong.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = wrong.wav; sourceTree = "<group>"; };
 		27A703012F6D57B6002F6B06 /* floor.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = floor.jpg; sourceTree = "<group>"; };
+		27A703152F6D60AF002F6B06 /* roach_1.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roach_1.usdz; sourceTree = "<group>"; };
+		27A703162F6D60AF002F6B06 /* roach_1_animated.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roach_1_animated.usdz; sourceTree = "<group>"; };
+		27A703172F6D60AF002F6B06 /* roach_2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roach_2.usdz; sourceTree = "<group>"; };
+		27A703182F6D60AF002F6B06 /* roach_2_animated.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = roach_2_animated.usdz; sourceTree = "<group>"; };
 		27D269FD2F6BF2F100723120 /* PlayerEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerEntity.swift; sourceTree = "<group>"; };
 		27D269FF2F6BF62700723120 /* ContactSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactSystem.swift; sourceTree = "<group>"; };
 		27D26A012F6BFA8000723120 /* MysteryBagEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MysteryBagEntity.swift; sourceTree = "<group>"; };
@@ -114,9 +118,11 @@
 				27A702F12F6D57B6002F6B06 /* food_pile.usdz */,
 				27A702F22F6D57B6002F6B06 /* oil_drum.usdz */,
 				27A702F32F6D57B6002F6B06 /* oil_puddle.usdz */,
-				27A702F42F6D57B6002F6B06 /* roach_1.usdz */,
-				27A702F52F6D57B6002F6B06 /* roach_2.usdz */,
 				27A702F62F6D57B6002F6B06 /* roach_3.usdz */,
+				27A703152F6D60AF002F6B06 /* roach_1.usdz */,
+				27A703162F6D60AF002F6B06 /* roach_1_animated.usdz */,
+				27A703172F6D60AF002F6B06 /* roach_2.usdz */,
+				27A703182F6D60AF002F6B06 /* roach_2_animated.usdz */,
 				27A702F72F6D57B6002F6B06 /* trash_barrel.usdz */,
 				27A702F82F6D57B6002F6B06 /* trash_pile.usdz */,
 			);
@@ -306,15 +312,17 @@
 				27A703072F6D57B6002F6B06 /* oil_puddle.usdz in Resources */,
 				27A703082F6D57B6002F6B06 /* oil_drum.usdz in Resources */,
 				27A703092F6D57B6002F6B06 /* trash_pile.usdz in Resources */,
-				27A7030A2F6D57B6002F6B06 /* roach_2.usdz in Resources */,
 				27A7030B2F6D57B6002F6B06 /* correct.wav in Resources */,
+				27A703192F6D60AF002F6B06 /* roach_1_animated.usdz in Resources */,
+				27A7031A2F6D60AF002F6B06 /* roach_2_animated.usdz in Resources */,
+				27A7031B2F6D60AF002F6B06 /* roach_2.usdz in Resources */,
+				27A7031C2F6D60AF002F6B06 /* roach_1.usdz in Resources */,
 				27A7030C2F6D57B6002F6B06 /* gameover_lose.wav in Resources */,
 				27A7030D2F6D57B6002F6B06 /* gameover_win.wav in Resources */,
 				27A7030E2F6D57B6002F6B06 /* black_plastic.usdz in Resources */,
 				27A7030F2F6D57B6002F6B06 /* skittering_sound.wav in Resources */,
 				27A703102F6D57B6002F6B06 /* food_pile.usdz in Resources */,
 				27A703112F6D57B6002F6B06 /* wrong.wav in Resources */,
-				27A703122F6D57B6002F6B06 /* roach_1.usdz in Resources */,
 				27A703132F6D57B6002F6B06 /* byegone.usdz in Resources */,
 				27A703142F6D57B6002F6B06 /* trash_barrel.usdz in Resources */,
 			);

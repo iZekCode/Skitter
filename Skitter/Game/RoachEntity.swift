@@ -4,14 +4,14 @@ import UIKit
 /// Factory for creating cockroach entities
 enum RoachEntity {
     static let floorOffset: Float = 0.1
-    static let chaserScale: Float = 25
+    static let chaserScale: Float = 5
     
     // Capsule dimensions — should roughly match the roach visual body at scale 10.
     // Height = total capsule length (head to tail).
     // Radius = half the body width.
     // Tweak these if the hitbox still feels off.
     static let collisionCapsuleRadius: Float = 0.25 * chaserScale
-    static let collisionCapsuleHeight: Float = 0.5 * chaserScale
+    static let collisionCapsuleHeight: Float = 0.6 * chaserScale
 
     // -------------------------------------------------------------------------
     // MARK: - Template cache
@@ -25,12 +25,12 @@ enum RoachEntity {
         if let scene = try? Entity.load(named: "roach_1") {
             scene.scale = SIMD3<Float>(repeating: chaserScale)
             let flatten = simd_quatf(angle: 0, axis: SIMD3<Float>(1, 0, 0))
-            let facing  = simd_quatf(angle: -.pi / 2, axis: SIMD3<Float>(0, 1, 0))
+            let facing  = simd_quatf(angle: .pi / 2, axis: SIMD3<Float>(0, 1, 0))
             scene.orientation = facing * flatten
             chaserTemplate = scene
-            print("[RoachEntity] ✅ Preloaded roachType1_raw.usdz")
+            print("[RoachEntity] ✅ Preloaded roach_1.usdz")
         } else {
-            print("[RoachEntity] ⚠️ Could not preload roachType1_raw.usdz — will use fallback")
+            print("[RoachEntity] ⚠️ Could not preload roach_1.usdz — will use fallback")
         }
     }
 
