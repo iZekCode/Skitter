@@ -13,6 +13,7 @@ struct GameView: View {
     @State private var bagTriggerSystem:  BagTriggerSystem?
     @State private var escalationSystem:  EscalationSystem?
     @State private var fogSphere:         FogSphere?
+    @State private var puddleSystem: PuddleSystem?
     @State private var playerEntity:      ModelEntity?
     @State private var roachSpawnTimer:   Timer?
     @State private var showCountdown      = true
@@ -295,6 +296,7 @@ struct GameView: View {
             contactSystem = ContactSystem(
                 scene: scene, gameState: gameState,
                 hapticManager: hapticManager, audioManager: audioManager)
+            puddleSystem = PuddleSystem(scene: scene)
             if let arenaRoot = playerEntity?.parent {
                 MysteryBagEntity.spawnAll(in: arenaRoot)
                 escalationSystem = EscalationSystem(gameState: gameState, roachParent: arenaRoot, audioManager: audioManager)
@@ -342,6 +344,7 @@ struct GameView: View {
         escalationSystem?.cancel();       escalationSystem = nil
         roachSpawnTimer?.invalidate();    roachSpawnTimer = nil
         fogSphere = nil
+        puddleSystem?.cancel(); puddleSystem = nil
         audioManager.stop()
         gameState.reset()
     }

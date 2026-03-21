@@ -205,7 +205,8 @@ enum ArenaBuilder {
     ) -> Entity {
         let slot = slotModels[index]
         let node = Entity()
-        node.name = "obstacle_\(index)"; node.position = config.position
+        node.name = slot.name == "oil_puddle" ? "puddle_\(index)" : "obstacle_\(index)"
+        node.position = config.position
 
         if let tmpl = modelCache[slot.name] {
             let v = tmpl.clone(recursive: true)

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2715761A2F6EC2A100418487 /* PuddleSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271576192F6EC29E00418487 /* PuddleSystem.swift */; };
 		273F5D4C2F6CDD8C004F5D81 /* DualThumbControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */; };
 		2748FA472F6E36CB002A2B97 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748FA462F6E36C7002A2B97 /* AudioManager.swift */; };
 		2748FA492F6E70BC002A2B97 /* VignetteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748FA482F6E70B8002A2B97 /* VignetteView.swift */; };
@@ -57,6 +58,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		271576192F6EC29E00418487 /* PuddleSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PuddleSystem.swift; sourceTree = "<group>"; };
 		273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualThumbControlView.swift; sourceTree = "<group>"; };
 		2748FA462F6E36C7002A2B97 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		2748FA482F6E70B8002A2B97 /* VignetteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VignetteView.swift; sourceTree = "<group>"; };
@@ -217,6 +219,7 @@
 				AB000009 /* RoachAISystem.swift */,
 				27D26A032F6BFAD500723120 /* BagTriggerSystem.swift */,
 				27D26A052F6C027400723120 /* EscalationSystem.swift */,
+				271576192F6EC29E00418487 /* PuddleSystem.swift */,
 				27D269FF2F6BF62700723120 /* ContactSystem.swift */,
 			);
 			path = Systems;
@@ -368,6 +371,7 @@
 				AA000009 /* RoachAISystem.swift in Sources */,
 				27D26A022F6BFA8500723120 /* MysteryBagEntity.swift in Sources */,
 				27D26A002F6BF62C00723120 /* ContactSystem.swift in Sources */,
+				2715761A2F6EC2A100418487 /* PuddleSystem.swift in Sources */,
 				AA000011 /* MotionController.swift in Sources */,
 				AA000012 /* HapticManager.swift in Sources */,
 				AA000013 /* HUDView.swift in Sources */,
