@@ -224,6 +224,10 @@ struct GameView: View {
     private func tickCamera() {
         guard let player = playerEntity, let camera = cameraEntity else { return }
 
+        // Re-apply stored joystick axes every frame so character keeps moving
+        // even when the thumb is held still and the gesture onChanged stops firing.
+        motionController.tickMovement()
+
         let basePos = player.position(relativeTo: nil)
         let eyePos  = basePos + SIMD3<Float>(0, PlayerEntity.eyeHeight, 0)
 
