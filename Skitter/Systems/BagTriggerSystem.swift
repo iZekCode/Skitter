@@ -96,7 +96,7 @@ class BagTriggerSystem {
         switch bagType {
 
         case .baygon:
-            labelState.show(message: "BAYGON!", isWin: true)
+            labelState.show(message: "BYEGONE", isWin: true)
             hapticManager?.playBaygonWin()
             audioManager?.playCorrect()
 
@@ -108,7 +108,7 @@ class BagTriggerSystem {
 
         case .bait:
             gameState.baitTriggeredCount += 1
-            labelState.show(message: "TUMPUKAN BUSUK", isWin: false)
+            labelState.show(message: "FOOD PILE", isWin: false)
             hapticManager?.playBaitTrigger()
             audioManager?.playWrong()
 

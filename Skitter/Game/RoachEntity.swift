@@ -20,8 +20,8 @@ enum RoachEntity {
     // MARK: - Giant (roach_2)
 
     static let giantScale:              Float = 8.0
-    static let giantCapsuleRadius:      Float = 0.25 * giantScale
-    static let giantCapsuleHeight:      Float = 0.60 * giantScale
+    static let giantCapsuleRadius:      Float = 0.3 * giantScale
+    static let giantCapsuleHeight:      Float = 0.7 * giantScale
     /// Yaw offset in radians to correct roach_2 model facing direction.
     static let giantFacingYaw:          Float = 0.0
 
