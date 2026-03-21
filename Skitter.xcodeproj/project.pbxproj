@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		273F5D4C2F6CDD8C004F5D81 /* DualThumbControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */; };
 		2748FA472F6E36CB002A2B97 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748FA462F6E36C7002A2B97 /* AudioManager.swift */; };
+		2748FA492F6E70BC002A2B97 /* VignetteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748FA482F6E70B8002A2B97 /* VignetteView.swift */; };
 		27A703032F6D57B6002F6B06 /* roach_3.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702F62F6D57B6002F6B06 /* roach_3.usdz */; };
 		27A703042F6D57B6002F6B06 /* fence.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702F02F6D57B6002F6B06 /* fence.usdz */; };
 		27A703052F6D57B6002F6B06 /* floor.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27A703012F6D57B6002F6B06 /* floor.jpg */; };
@@ -55,6 +56,7 @@
 /* Begin PBXFileReference section */
 		273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualThumbControlView.swift; sourceTree = "<group>"; };
 		2748FA462F6E36C7002A2B97 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		2748FA482F6E70B8002A2B97 /* VignetteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VignetteView.swift; sourceTree = "<group>"; };
 		27A702EE2F6D57B6002F6B06 /* black_plastic.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = black_plastic.usdz; sourceTree = "<group>"; };
 		27A702EF2F6D57B6002F6B06 /* byegone.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = byegone.usdz; sourceTree = "<group>"; };
 		27A702F02F6D57B6002F6B06 /* fence.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = fence.usdz; sourceTree = "<group>"; };
@@ -225,6 +227,7 @@
 			isa = PBXGroup;
 			children = (
 				AB000013 /* HUDView.swift */,
+				2748FA482F6E70B8002A2B97 /* VignetteView.swift */,
 				273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */,
 				27D26A072F6C05C800723120 /* BagsRemainingView.swift */,
 				27D26A092F6C05DC00723120 /* TriggerLabelView.swift */,
@@ -344,6 +347,7 @@
 				2748FA472F6E36CB002A2B97 /* AudioManager.swift in Sources */,
 				AA000003 /* GameState.swift in Sources */,
 				AA000004 /* GameView.swift in Sources */,
+				2748FA492F6E70BC002A2B97 /* VignetteView.swift in Sources */,
 				27D26A082F6C05C900723120 /* BagsRemainingView.swift in Sources */,
 				AA000005 /* ArenaBuilder.swift in Sources */,
 				27D26A042F6BFAD600723120 /* BagTriggerSystem.swift in Sources */,

@@ -27,6 +27,9 @@ struct GameView: View {
                 loadingOverlay
             } else {
                 realityViewScene
+                // Vignette — sits above 3D scene, below all UI
+                VignetteView(baitCount: gameState.baitTriggeredCount)
+
                 if !showCountdown && !gameState.isGameOver {
                     DualThumbControlView(
                         onMovement: { dx, dz in motionController.applyJoystickInput(dx: dx, dz: dz) },
