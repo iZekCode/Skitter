@@ -9,6 +9,10 @@ struct HUDView: View {
     let gameState: GameState
     let labelState: BagTriggerLabelState
 
+    /// Camera yaw from MotionController — passed through to MiniMapView for the
+    /// radar cone. Updated every frame in GameView.tickCamera.
+    let cameraYaw: Float
+
     var body: some View {
         ZStack {
             // ── Top bar ───────────────────────────────────────────────────────
@@ -17,7 +21,11 @@ struct HUDView: View {
 
                     // Left — minimap + bag dots
                     VStack(alignment: .leading, spacing: 6) {
-                        MiniMapView(playerPosition: playerPosition)
+                        MiniMapView(
+                            playerPosition: playerPosition,
+                            cameraYaw:      cameraYaw,
+                            baitCount:      gameState.baitTriggeredCount
+                        )
                         BagsRemainingView(bagsRemaining: gameState.bagsRemaining)
                     }
                     .padding(.leading, 16)
@@ -46,7 +54,6 @@ struct HUDView: View {
     }
 
     /// Pull player position from gameState for the minimap.
-    /// Defaults to zero if not yet available.
     private var playerPosition: SIMD3<Float> {
         gameState.playerPosition
     }

@@ -21,6 +21,11 @@ struct GameView: View {
     @State private var sceneUpdateSubscription: (any Cancellable)?
     @State private var assetsLoading = true
 
+    /// Mirrors MotionController.cameraYaw into SwiftUI state so the minimap
+    /// radar cone re-renders every time the player looks around.
+    /// (MotionController.cameraYaw is not @Published, so we copy it in tickCamera.)
+    @State private var hudCameraYaw: Float = .pi
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -41,7 +46,8 @@ struct GameView: View {
                 if !showCountdown {
                     HUDView(
                         gameState:  gameState,
-                        labelState: bagTriggerSystem?.labelState ?? BagTriggerLabelState()
+                        labelState: bagTriggerSystem?.labelState ?? BagTriggerLabelState(),
+                        cameraYaw:  hudCameraYaw
                     )
                 }
                 if showCountdown  { countdownOverlay }
@@ -181,7 +187,7 @@ struct GameView: View {
             self.playerEntity = player
             motionController.attach(to: player)
 
-            // Fog sphere — added right after player so it renders above the arena
+            // Fog sphere
             let fog = FogSphere.create()
             physicsRoot.addChild(fog.entity)
             self.fogSphere = fog
@@ -244,6 +250,14 @@ struct GameView: View {
         if let motion = player.components[PhysicsMotionComponent.self] {
             gameState.ballSpeed      = length(motion.linearVelocity)
             gameState.playerPosition = basePos
+        }
+
+        // Push yaw into SwiftUI state so the minimap radar cone re-renders.
+        // We throttle to ~20 fps for the HUD (every ~3 frames at 60 fps) to
+        // avoid forcing a full SwiftUI layout pass every single frame.
+        let newYaw = motionController.cameraYaw
+        if abs(newYaw - hudCameraYaw) > 0.04 {
+            hudCameraYaw = newYaw
         }
 
         // Spatial audio: update listener + roach positions every frame
