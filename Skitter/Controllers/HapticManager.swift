@@ -54,50 +54,6 @@ class HapticManager {
         }
     }
 
-    /// Juicy crush — double transient + short continuous
-    func playCrush() {
-        guard supportsHaptics, let engine = engine else { return }
-
-        do {
-            let events: [CHHapticEvent] = [
-                // First transient hit
-                CHHapticEvent(
-                    eventType: .hapticTransient,
-                    parameters: [
-                        CHHapticEventParameter(parameterID: .hapticIntensity, value: 1.0),
-                        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.9)
-                    ],
-                    relativeTime: 0
-                ),
-                // Second transient hit
-                CHHapticEvent(
-                    eventType: .hapticTransient,
-                    parameters: [
-                        CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.7),
-                        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.5)
-                    ],
-                    relativeTime: 0.08
-                ),
-                // Continuous tail-off
-                CHHapticEvent(
-                    eventType: .hapticContinuous,
-                    parameters: [
-                        CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.3),
-                        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.2)
-                    ],
-                    relativeTime: 0.12,
-                    duration: 0.25
-                )
-            ]
-
-            let pattern = try CHHapticPattern(events: events, parameters: [])
-            let player = try engine.makePlayer(with: pattern)
-            try player.start(atTime: CHHapticTimeImmediate)
-        } catch {
-            print("[HapticManager] Crush haptic error: \(error)")
-        }
-    }
-
     /// Game over — continuous ramp down
     func playGameOver() {
         guard supportsHaptics, let engine = engine else { return }
