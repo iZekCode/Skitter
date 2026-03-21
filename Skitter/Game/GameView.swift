@@ -250,6 +250,12 @@ struct GameView: View {
             listenerYaw:      motionController.cameraYaw,
             roachEntities:    Array(roachEntities)
         )
+
+        // Proximity haptic — closest roach distance
+        let closestDist = roachEntities.map {
+            length($0.position(relativeTo: nil) - basePos)
+        }.min() ?? Float.infinity
+        hapticManager.updateRoachProximity(closestDistance: closestDist)
     }
 
     // MARK: - Game logic
