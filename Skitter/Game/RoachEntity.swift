@@ -3,98 +3,163 @@ import UIKit
 
 /// Factory for creating cockroach entities
 enum RoachEntity {
-    static let floorOffset: Float = 0.1
-    static let chaserScale: Float = 5
-    
-    // Capsule dimensions — should roughly match the roach visual body at scale 10.
-    // Height = total capsule length (head to tail).
-    // Radius = half the body width.
-    // Tweak these if the hitbox still feels off.
-    static let collisionCapsuleRadius: Float = 0.25 * chaserScale
-    static let collisionCapsuleHeight: Float = 0.6 * chaserScale
 
-    // -------------------------------------------------------------------------
+    // MARK: - Shared constants
+
+    static let floorOffset: Float = 0.1
+
+    // MARK: - Chaser (roach_1)
+
+    static let chaserScale:             Float = 4.0
+    static let chaserCapsuleRadius:     Float = 0.25 * chaserScale
+    static let chaserCapsuleHeight:     Float = 0.60 * chaserScale
+    /// Yaw offset in radians to correct roach_1 model facing direction.
+    /// 0 = faces +Z, .pi/2 = faces +X, .pi = faces -Z, -.pi/2 = faces -X
+    static let chaserFacingYaw:         Float = .pi / 2
+
+    // MARK: - Giant (roach_2)
+
+    static let giantScale:              Float = 8.0
+    static let giantCapsuleRadius:      Float = 0.25 * giantScale
+    static let giantCapsuleHeight:      Float = 0.60 * giantScale
+    /// Yaw offset in radians to correct roach_2 model facing direction.
+    static let giantFacingYaw:          Float = 0.0
+
+    // MARK: - Flying (roach_3)
+
+    static let flyingScale:             Float = 4.0
+    static let flyingCapsuleRadius:     Float = 0.25 * flyingScale
+    static let flyingCapsuleHeight:     Float = 0.60 * flyingScale
+    /// Yaw offset in radians to correct roach_3 model facing direction.
+    static let flyingFacingYaw:         Float = .pi / 2
+    /// How high flying roaches hover above the floor (meters)
+    static let flyingHoverHeight:       Float = 2.5
+
     // MARK: - Template cache
 
-    private static var chaserTemplate: Entity? = nil
+    private static var chaserTemplate:  Entity? = nil
+    private static var giantTemplate:   Entity? = nil
+    private static var flyingTemplate:  Entity? = nil
 
-    /// Call once in GameView.beginGame() before any roaches spawn.
-    /// Loads the USDZ a single time — all spawns after this just clone it.
+    /// Preload all roach USDZ models. Call once before any spawning.
     static func preload() {
-        guard chaserTemplate == nil else { return }
-        if let scene = try? Entity.load(named: "roach_1") {
-            scene.scale = SIMD3<Float>(repeating: chaserScale)
-            let flatten = simd_quatf(angle: 0, axis: SIMD3<Float>(1, 0, 0))
-            let facing  = simd_quatf(angle: .pi / 2, axis: SIMD3<Float>(0, 1, 0))
-            scene.orientation = facing * flatten
-            chaserTemplate = scene
-            print("[RoachEntity] ✅ Preloaded roach_1.usdz")
-        } else {
-            print("[RoachEntity] ⚠️ Could not preload roach_1.usdz — will use fallback")
+        if chaserTemplate == nil {
+            chaserTemplate = loadTemplate(named: "roach_1", scale: chaserScale, facingYaw: chaserFacingYaw)
+        }
+        if giantTemplate == nil {
+            giantTemplate = loadTemplate(named: "roach_2", scale: giantScale, facingYaw: giantFacingYaw)
+        }
+        if flyingTemplate == nil {
+            flyingTemplate = loadTemplate(named: "roach_3", scale: flyingScale, facingYaw: flyingFacingYaw)
         }
     }
 
-    // -------------------------------------------------------------------------
+    private static func loadTemplate(named name: String, scale: Float, facingYaw: Float) -> Entity? {
+        guard let scene = try? Entity.load(named: name) else {
+            print("[RoachEntity] ⚠️  Could not load \(name).usdz — fallback mesh will be used")
+            return nil
+        }
+        scene.scale       = SIMD3<Float>(repeating: scale)
+        scene.orientation = simd_quatf(angle: facingYaw, axis: SIMD3<Float>(0, 1, 0))
+        print("[RoachEntity] ✅ Preloaded \(name).usdz")
+        return scene
+    }
+
     // MARK: - Chaser
 
     static func createChaser(at position: SIMD3<Float>) -> ModelEntity {
-        let container = ModelEntity()
-        container.name = "roach_chaser"
-        container.position = SIMD3<Float>(position.x, floorOffset, position.z)
+        let container = makeContainer(
+            name:          "roach_chaser",
+            position:      SIMD3<Float>(position.x, floorOffset, position.z),
+            template:      chaserTemplate,
+            capsuleRadius: chaserCapsuleRadius,
+            capsuleHeight: chaserCapsuleHeight,
+            component:     .chaser()
+        )
+        return container
+    }
 
-        // Clone the cached template — memory copy only, no disk/GPU work
-        if let template = chaserTemplate {
-            container.addChild(template.clone(recursive: true))
+    // MARK: - Giant
+
+    static func createGiant(at position: SIMD3<Float>) -> ModelEntity {
+        let container = makeContainer(
+            name:          "roach_giant",
+            position:      SIMD3<Float>(position.x, floorOffset, position.z),
+            template:      giantTemplate,
+            capsuleRadius: giantCapsuleRadius,
+            capsuleHeight: giantCapsuleHeight,
+            component:     .giant()
+        )
+        return container
+    }
+
+    // MARK: - Flying
+
+    static func createFlying(at position: SIMD3<Float>) -> ModelEntity {
+        let container = makeContainer(
+            name:          "roach_flying",
+            position:      SIMD3<Float>(position.x, flyingHoverHeight, position.z),
+            template:      flyingTemplate,
+            capsuleRadius: flyingCapsuleRadius,
+            capsuleHeight: flyingCapsuleHeight,
+            component:     .flying()
+        )
+        return container
+    }
+
+    // MARK: - Shared builder
+
+    private static func makeContainer(
+        name:          String,
+        position:      SIMD3<Float>,
+        template:      Entity?,
+        capsuleRadius: Float,
+        capsuleHeight: Float,
+        component:     RoachComponent
+    ) -> ModelEntity {
+        let container      = ModelEntity()
+        container.name     = name
+        container.position = position
+
+        if let tmpl = template {
+            container.addChild(tmpl.clone(recursive: true))
         } else {
-            // preload() wasn't called or failed — fall back to procedural mesh
-            let fallback = makeFallbackMesh()
+            let fallback = makeFallbackMesh(component: component)
             container.model = fallback.model
         }
 
         container.components.set(PhysicsBodyComponent(mode: .kinematic))
-        
-        // Capsule aligned along Z (the roach's forward/back axis).
-        // This covers the full body length — head AND tail trigger the hit,
-        // not just the center like a single small sphere.
         container.components.set(CollisionComponent(
-            shapes: [
-                .generateCapsule(height: collisionCapsuleHeight, radius: collisionCapsuleRadius)
-            ],
+            shapes: [.generateCapsule(height: capsuleHeight, radius: capsuleRadius)],
             mode: .trigger,
             filter: CollisionFilter(
                 group: CollisionGroups.roach,
-                mask: [CollisionGroups.ball]
+                mask:  [CollisionGroups.ball]
             )
         ))
         container.components.set(PhysicsMotionComponent())
-        container.components.set(RoachComponent.chaser())
+        container.components.set(component)
 
         return container
     }
 
-    // -------------------------------------------------------------------------
     // MARK: - Fallback mesh
 
-    private static func makeFallbackMesh() -> ModelEntity {
-        let bodyRadius: Float = 0.35
-        let bodyLength: Float = 0.70
-
-        let mesh = MeshResource.generateBox(
-            width: bodyRadius * 2,
-            height: bodyRadius * 0.6,
-            depth: bodyLength,
-            cornerRadius: 0.08
-        )
-
-        var material = PhysicallyBasedMaterial()
-        material.baseColor = .init(tint: UIColor(red: 0.35, green: 0.20, blue: 0.10, alpha: 1.0))
-        material.roughness = .init(floatLiteral: 0.4)
-        material.metallic  = .init(floatLiteral: 0.2)
-
-        return ModelEntity(mesh: mesh, materials: [material])
+    private static func makeFallbackMesh(component: RoachComponent) -> ModelEntity {
+        let color: UIColor
+        switch component.roachType {
+        case .chaser: color = UIColor(red: 0.35, green: 0.20, blue: 0.10, alpha: 1.0)
+        case .giant:  color = UIColor(red: 0.10, green: 0.10, blue: 0.10, alpha: 1.0)
+        case .flying: color = UIColor(red: 0.50, green: 0.20, blue: 0.10, alpha: 1.0)
+        }
+        let mesh = MeshResource.generateBox(width: 0.7, height: 0.4, depth: 1.4, cornerRadius: 0.08)
+        var mat  = PhysicallyBasedMaterial()
+        mat.baseColor = .init(tint: color)
+        mat.roughness = .init(floatLiteral: 0.4)
+        mat.metallic  = .init(floatLiteral: 0.2)
+        return ModelEntity(mesh: mesh, materials: [mat])
     }
 
-    // -------------------------------------------------------------------------
     // MARK: - Spawn positions
 
     static func randomEdgePosition(arenaSize: Float = ArenaBuilder.arenaSize) -> SIMD3<Float> {

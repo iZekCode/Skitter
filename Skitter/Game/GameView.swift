@@ -267,7 +267,7 @@ struct GameView: View {
                 hapticManager: hapticManager, audioManager: audioManager)
             if let arenaRoot = playerEntity?.parent {
                 MysteryBagEntity.spawnAll(in: arenaRoot)
-                escalationSystem = EscalationSystem(gameState: gameState, roachParent: arenaRoot)
+                escalationSystem = EscalationSystem(gameState: gameState, roachParent: arenaRoot, audioManager: audioManager)
                 bagTriggerSystem = BagTriggerSystem(
                     scene: scene, gameState: gameState,
                     hapticManager: hapticManager, audioManager: audioManager,

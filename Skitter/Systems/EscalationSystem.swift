@@ -1,30 +1,26 @@
 import RealityKit
 import Foundation
 
-/// Observes baitTriggeredCount on GameState and reacts to each new trigger.
+/// Reacts to each new bait trigger — spawns new roaches and upgrades existing ones.
 ///
-/// Phase 2 scope — Chaser only:
-/// - Each bait trigger spawns a wave of new Chasers
-/// - Speed of all active roaches increases slightly each trigger
-///
-/// Phase 3 will add Giant & Flying upgrades on top of this.
+/// Bait 1: spawn 3 Giants + upgrade all active Chasers → Giant
+/// Bait 2: spawn 2 Flying + 2 Giants + upgrade all active Giants → Flying
+/// Bait 3: spawn 3 Flying + 2 Giants, speed bump all
+/// Bait 4+: spawn swarm of Chasers, speed bump all
 class EscalationSystem {
-    private weak var gameState: GameState?
+    private weak var gameState:  GameState?
     private weak var roachParent: Entity?
+    private weak var audioManager: AudioManager?
 
-    /// Track which bait count we've already reacted to — prevents double-firing
     private var lastHandledBaitCount: Int = 0
-
-    /// Poll timer — checks gameState for new bait triggers every 0.2s.
-    /// Using a timer instead of Combine/observation keeps this self-contained.
     private var pollTimer: Timer?
 
-    /// Speed multiplier applied to all active roaches per bait trigger.
-    private static let speedBumpPerBait: Float = 0.15   // +15% each trigger
+    private static let speedBumpPerBait: Float = 0.15
 
-    init(gameState: GameState, roachParent: Entity) {
-        self.gameState   = gameState
-        self.roachParent = roachParent
+    init(gameState: GameState, roachParent: Entity, audioManager: AudioManager? = nil) {
+        self.gameState    = gameState
+        self.roachParent  = roachParent
+        self.audioManager = audioManager
 
         pollTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
             self?.checkEscalation()
@@ -37,7 +33,6 @@ class EscalationSystem {
         guard let gameState = gameState, !gameState.isGameOver else { return }
         guard gameState.baitTriggeredCount > lastHandledBaitCount else { return }
 
-        // One or more new bait triggers since last check
         let newTriggers = gameState.baitTriggeredCount - lastHandledBaitCount
         for _ in 0..<newTriggers {
             lastHandledBaitCount += 1
@@ -45,42 +40,60 @@ class EscalationSystem {
         }
     }
 
-    // MARK: - Escalation logic per bait
+    // MARK: - Escalation per bait
 
     private func handleEscalationTick(baitCount: Int) {
         guard let parent = roachParent else { return }
 
-        // ── Spawn wave ───────────────────────────────────────────────────────
-        let spawnCount: Int
         switch baitCount {
-        case 1:  spawnCount = 3
-        case 2:  spawnCount = 4
-        case 3:  spawnCount = 5
-        default: spawnCount = 6
-        }
 
-        for _ in 0..<spawnCount {
-            let pos = RoachEntity.randomEdgePosition()
-            let roach = RoachEntity.createChaser(at: pos)
+        case 1:
+            spawnWave(parent: parent, count: 3, type: .giant)
+            print("[EscalationSystem] Bait 1: +3 Giants")
+         
+        case 2:
+            spawnWave(parent: parent, count: 2, type: .giant)
+            spawnWave(parent: parent, count: 3, type: .flying)
+            print("[EscalationSystem] Bait 2: +2 Giants +3 Flying")
+         
+        case 3:
+            spawnWave(parent: parent, count: 1, type: .giant)
+            spawnWave(parent: parent, count: 4, type: .flying)
+            bumpAllSpeeds(in: parent)
+            print("[EscalationSystem] Bait 3: +1 Giant +4 Flying, speed bump")
+         
+        default:
+            spawnWave(parent: parent, count: 5, type: .flying)
+            bumpAllSpeeds(in: parent)
+            print("[EscalationSystem] Bait \(baitCount): +5 Flying, speed bump")
+        }
+    }
+
+    // MARK: - Spawn wave
+
+    private enum SpawnType { case chaser, giant, flying }
+
+    private func spawnWave(parent: Entity, count: Int, type: SpawnType) {
+        for _ in 0..<count {
+            let pos   = RoachEntity.randomEdgePosition()
+            let roach: ModelEntity
+            switch type {
+            case .chaser:  roach = RoachEntity.createChaser(at: pos)
+            case .giant:   roach = RoachEntity.createGiant(at: pos)
+            case .flying:  roach = RoachEntity.createFlying(at: pos)
+            }
             parent.addChild(roach)
+            audioManager?.addRoach(roach)
         }
-
-        // ── Speed bump all active roaches ────────────────────────────────────
-        // Walk every existing roach and increase its speed component.
-        // RoachAISystem reads speed from RoachComponent every frame,
-        // so this takes effect immediately next update.
-        bumpActiveRoachSpeeds(in: parent)
-
-        print("[EscalationSystem] Bait \(baitCount): spawned \(spawnCount) chasers, speed bumped")
     }
 
     // MARK: - Speed bump
 
-    private func bumpActiveRoachSpeeds(in parent: Entity) {
+    private func bumpAllSpeeds(in parent: Entity) {
         for child in parent.children {
-            guard var roachComp = child.components[RoachComponent.self] else { continue }
-            roachComp.speed *= (1.0 + Self.speedBumpPerBait)
-            child.components[RoachComponent.self] = roachComp
+            guard var comp = child.components[RoachComponent.self] else { continue }
+            comp.speed *= (1.0 + Self.speedBumpPerBait)
+            child.components[RoachComponent.self] = comp
         }
     }
 
