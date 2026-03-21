@@ -12,6 +12,7 @@ struct GameView: View {
     @State private var contactSystem:     ContactSystem?
     @State private var bagTriggerSystem:  BagTriggerSystem?
     @State private var escalationSystem:  EscalationSystem?
+    @State private var fogSphere:         FogSphere?
     @State private var playerEntity:      ModelEntity?
     @State private var roachSpawnTimer:   Timer?
     @State private var showCountdown      = true
@@ -180,6 +181,11 @@ struct GameView: View {
             self.playerEntity = player
             motionController.attach(to: player)
 
+            // Fog sphere — added right after player so it renders above the arena
+            let fog = FogSphere.create()
+            physicsRoot.addChild(fog.entity)
+            self.fogSphere = fog
+
             let camera = PerspectiveCamera()
             camera.name = "gameCamera"
             camera.camera.fieldOfViewInDegrees = 75
@@ -227,8 +233,6 @@ struct GameView: View {
     private func tickCamera() {
         guard let player = playerEntity, let camera = cameraEntity else { return }
 
-        // Re-apply stored joystick axes every frame so character keeps moving
-        // even when the thumb is held still and the gesture onChanged stops firing.
         motionController.tickMovement()
 
         let basePos = player.position(relativeTo: nil)
@@ -256,6 +260,9 @@ struct GameView: View {
             length($0.position(relativeTo: nil) - basePos)
         }.min() ?? Float.infinity
         hapticManager.updateRoachProximity(closestDistance: closestDist)
+
+        // Fog sphere follows player every frame
+        fogSphere?.follow(player: player)
     }
 
     // MARK: - Game logic
@@ -320,6 +327,7 @@ struct GameView: View {
         bagTriggerSystem?.cancel();       bagTriggerSystem = nil
         escalationSystem?.cancel();       escalationSystem = nil
         roachSpawnTimer?.invalidate();    roachSpawnTimer = nil
+        fogSphere = nil
         audioManager.stop()
         gameState.reset()
     }

@@ -12,9 +12,9 @@ enum PlayerEntity {
     // MARK: - Constants
 
     /// Capsule half-height (meters). Total standing height = 2 × halfHeight + 2 × radius.
-    static let halfHeight: Float = 0.4
+    static let halfHeight: Float = 0.2
     /// Capsule radius (meters).
-    static let radius: Float = 0.2
+    static let radius: Float = 0.1
     /// Full standing height, convenience.
     static let standingHeight: Float = halfHeight * 2 + radius * 2   // 1.2 m
 

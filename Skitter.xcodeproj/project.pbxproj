@@ -12,6 +12,7 @@
 		2748FA492F6E70BC002A2B97 /* VignetteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748FA482F6E70B8002A2B97 /* VignetteView.swift */; };
 		2748FA4D2F6E8116002A2B97 /* food_pile_image.png in Resources */ = {isa = PBXBuildFile; fileRef = 2748FA4B2F6E8116002A2B97 /* food_pile_image.png */; };
 		2748FA4F2F6E8241002A2B97 /* byegone_image.png in Resources */ = {isa = PBXBuildFile; fileRef = 2748FA4E2F6E8241002A2B97 /* byegone_image.png */; };
+		2748FA532F6E946A002A2B97 /* FogSphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748FA522F6E9466002A2B97 /* FogSphere.swift */; };
 		27A703032F6D57B6002F6B06 /* roach_3.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702F62F6D57B6002F6B06 /* roach_3.usdz */; };
 		27A703042F6D57B6002F6B06 /* fence.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 27A702F02F6D57B6002F6B06 /* fence.usdz */; };
 		27A703052F6D57B6002F6B06 /* floor.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 27A703012F6D57B6002F6B06 /* floor.jpg */; };
@@ -61,6 +62,7 @@
 		2748FA482F6E70B8002A2B97 /* VignetteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VignetteView.swift; sourceTree = "<group>"; };
 		2748FA4B2F6E8116002A2B97 /* food_pile_image.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = food_pile_image.png; sourceTree = "<group>"; };
 		2748FA4E2F6E8241002A2B97 /* byegone_image.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = byegone_image.png; sourceTree = "<group>"; };
+		2748FA522F6E9466002A2B97 /* FogSphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FogSphere.swift; sourceTree = "<group>"; };
 		27A702EE2F6D57B6002F6B06 /* black_plastic.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = black_plastic.usdz; sourceTree = "<group>"; };
 		27A702EF2F6D57B6002F6B06 /* byegone.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = byegone.usdz; sourceTree = "<group>"; };
 		27A702F02F6D57B6002F6B06 /* fence.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = fence.usdz; sourceTree = "<group>"; };
@@ -199,6 +201,7 @@
 			children = (
 				AB000003 /* GameState.swift */,
 				AB000004 /* GameView.swift */,
+				2748FA522F6E9466002A2B97 /* FogSphere.swift */,
 				AB000005 /* ArenaBuilder.swift */,
 				27D269FD2F6BF2F100723120 /* PlayerEntity.swift */,
 				27D26A012F6BFA8000723120 /* MysteryBagEntity.swift */,
@@ -369,6 +372,7 @@
 				AA000012 /* HapticManager.swift in Sources */,
 				AA000013 /* HUDView.swift in Sources */,
 				27D26A0C2F6C060200723120 /* MiniMapView.swift in Sources */,
+				2748FA532F6E946A002A2B97 /* FogSphere.swift in Sources */,
 				AA000014 /* MainMenuView.swift in Sources */,
 				27D26A062F6C027600723120 /* EscalationSystem.swift in Sources */,
 				AA000015 /* GameOverView.swift in Sources */,
