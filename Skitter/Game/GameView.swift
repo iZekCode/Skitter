@@ -3,12 +3,12 @@ import RealityKit
 import Combine
 import simd
 
-/// Main game screen: RealityKit scene + HUD + dual-thumb controls overlay
 struct GameView: View {
     @Environment(AppState.self) private var appState
     @State private var gameState        = GameState()
     @State private var motionController = MotionController()
     @State private var hapticManager    = HapticManager()
+    @State private var audioManager     = AudioManager()
     @State private var contactSystem:     ContactSystem?
     @State private var bagTriggerSystem:  BagTriggerSystem?
     @State private var escalationSystem:  EscalationSystem?
@@ -16,76 +16,48 @@ struct GameView: View {
     @State private var roachSpawnTimer:   Timer?
     @State private var showCountdown      = true
     @State private var countdownValue     = 3
-
     @State private var cameraEntity:            PerspectiveCamera?
     @State private var sceneUpdateSubscription: (any Cancellable)?
-
-    /// True while USDZ / texture assets are loading off the main thread.
-    /// The RealityView is not added to the view hierarchy until this is false,
-    /// so the content block never blocks the main actor during loading.
     @State private var assetsLoading = true
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-
             if assetsLoading {
-                // ── Loading screen ────────────────────────────────────────────
                 loadingOverlay
             } else {
-                // ── 3D scene ──────────────────────────────────────────────────
                 realityViewScene
-
-                // ── Dual-thumb controls ───────────────────────────────────────
                 if !showCountdown && !gameState.isGameOver {
                     DualThumbControlView(
-                        onMovement: { dx, dz in
-                            motionController.applyJoystickInput(dx: dx, dz: dz)
-                        },
-                        onLook: { screenDX in
-                            motionController.applyLookDelta(screenDX: screenDX)
-                        }
+                        onMovement: { dx, dz in motionController.applyJoystickInput(dx: dx, dz: dz) },
+                        onLook:     { screenDX in motionController.applyLookDelta(screenDX: screenDX) }
                     )
                     .ignoresSafeArea()
                 }
-
-                // ── HUD ───────────────────────────────────────────────────────
                 if !showCountdown {
                     HUDView(
-                        gameState: gameState,
+                        gameState:  gameState,
                         labelState: bagTriggerSystem?.labelState ?? BagTriggerLabelState()
                     )
                 }
-
-                // ── Countdown ─────────────────────────────────────────────────
-                if showCountdown {
-                    countdownOverlay
-                }
-
-                // ── Game over ─────────────────────────────────────────────────
-                if gameState.isGameOver {
-                    gameOverOverlay
-                }
+                if showCountdown  { countdownOverlay }
+                if gameState.isGameOver { gameOverOverlay }
             }
         }
         .ignoresSafeArea()
-        .onAppear { preloadThenStart() }
+        .onAppear   { preloadThenStart() }
         .onDisappear { cleanup() }
     }
 
-    // MARK: - Asset loading (off main thread)
+    // MARK: - Asset loading
 
     private func preloadThenStart() {
-        // RealityKit's Entity.load / TextureResource.load MUST run on the main
-        // actor — calling them from a detached task crashes on iOS 18.
-        // Instead we stay on @MainActor but yield once so SwiftUI can render
-        // the loading overlay before the synchronous blocking calls begin.
         Task { @MainActor in
-            await Task.yield()          // allow loading screen to appear
+            await Task.yield()
             ArenaBuilder.preload()
             MysteryBagEntity.preload()
             RoachEntity.preload()
-            assetsLoading = false       // reveals RealityView
+            assetsLoading = false
             startCountdown()
         }
     }
@@ -121,7 +93,6 @@ struct GameView: View {
     private func startCountdown() {
         countdownValue = 3
         showCountdown  = true
-
         Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
             countdownValue -= 1
             if countdownValue <= 0 {
@@ -132,20 +103,21 @@ struct GameView: View {
         }
     }
 
-    // MARK: - Game Over Overlay
+    // MARK: - Game Over overlay
 
     private var gameOverOverlay: some View {
         ZStack {
             Color.black.opacity(0.75)
-
             VStack(spacing: 24) {
-                Text("GAME OVER")
+                Text(gameState.isWin ? "YOU WIN" : "GAME OVER")
                     .font(.system(size: 18, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Color(red: 0.9, green: 0.2, blue: 0.2))
+                    .foregroundStyle(
+                        gameState.isWin
+                            ? Color(red: 0.3, green: 0.9, blue: 0.3)
+                            : Color(red: 0.9, green: 0.2, blue: 0.2)
+                    )
                     .kerning(8)
-
                 statCard(title: "SURVIVED", value: gameState.formattedTime)
-
                 HStack(spacing: 16) {
                     Button { restartGame() } label: {
                         Text("PLAY AGAIN")
@@ -160,8 +132,7 @@ struct GameView: View {
                         Text("MENU")
                             .font(.system(size: 14, weight: .semibold, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.6))
-                            .padding(.vertical, 14)
-                            .padding(.horizontal, 24)
+                            .padding(.vertical, 14).padding(.horizontal, 24)
                             .background(Color.white.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
@@ -178,8 +149,7 @@ struct GameView: View {
         VStack(spacing: 6) {
             Text(title)
                 .font(.system(size: 10, weight: .medium, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.4))
-                .kerning(2)
+                .foregroundStyle(.white.opacity(0.4)).kerning(2)
             Text(value)
                 .font(.system(size: 28, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
@@ -189,14 +159,10 @@ struct GameView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
-    // MARK: - Scene Setup
-    // By the time this view is shown (assetsLoading == false), all caches are
-    // populated. The content block only assembles entities from memory — no disk IO.
+    // MARK: - Scene
 
     private var realityViewScene: some View {
         RealityView { content in
-
-            // ── Physics root ──────────────────────────────────────────────────
             let physicsRoot = Entity()
             physicsRoot.name = "physicsRoot"
             var sim = PhysicsSimulationComponent()
@@ -204,86 +170,50 @@ struct GameView: View {
             physicsRoot.components.set(sim)
             content.add(physicsRoot)
 
-            // ── Arena (reads from pre-warmed caches, no disk IO) ──────────────
-            let arena = ArenaBuilder.buildArena()
-            physicsRoot.addChild(arena)
+            physicsRoot.addChild(ArenaBuilder.buildArena())
 
-            // ── Player ────────────────────────────────────────────────────────
             let player = PlayerEntity.create()
             physicsRoot.addChild(player)
             self.playerEntity = player
             motionController.attach(to: player)
 
-            // ── Camera ────────────────────────────────────────────────────────
             let camera = PerspectiveCamera()
             camera.name = "gameCamera"
             camera.camera.fieldOfViewInDegrees = 75
-
-            if let eye = player.findEntity(named: "playerEye") {
-                camera.position = eye.position(relativeTo: nil)
-            } else {
-                camera.position = player.position + SIMD3<Float>(0, PlayerEntity.eyeHeight, 0)
-            }
-            camera.orientation = simd_quatf(
-                angle: motionController.cameraYaw,
-                axis:  SIMD3<Float>(0, 1, 0)
-            )
+            camera.position    = player.position + SIMD3<Float>(0, PlayerEntity.eyeHeight, 0)
+            camera.orientation = simd_quatf(angle: motionController.cameraYaw, axis: SIMD3<Float>(0,1,0))
             physicsRoot.addChild(camera)
             self.cameraEntity = camera
 
-            // ── Lighting ──────────────────────────────────────────────────────
-            // Fill light first — large white point at arena centre, very low
-            // intensity. Ensures PBR floor material has non-zero light input
-            // on the very first rendered frame, before the directional/mood
-            // lights are fully initialised by the renderer.
+            // Lights
             let fill = Entity()
-            fill.components.set(PointLightComponent(
-                color:             .white,
-                intensity:         600,
-                attenuationRadius: 80   // covers entire 60 m arena
-            ))
+            fill.components.set(PointLightComponent(color: .white, intensity: 600, attenuationRadius: 80))
             fill.position = SIMD3<Float>(0, 12, 0)
             physicsRoot.addChild(fill)
 
-            // Directional — warm dark key light
-            let dirLight = Entity()
-            dirLight.components.set(DirectionalLightComponent(
-                color:     UIColor(red: 0.15, green: 0.10, blue: 0.08, alpha: 1.0),
-                intensity: 2000
-            ))
-            dirLight.orientation = simd_quatf(
-                angle: -.pi / 3,
-                axis:  SIMD3<Float>(1, 0, 0.3)
-            )
-            physicsRoot.addChild(dirLight)
+            let dir = Entity()
+            dir.components.set(DirectionalLightComponent(
+                color: UIColor(red: 0.15, green: 0.10, blue: 0.08, alpha: 1), intensity: 2000))
+            dir.orientation = simd_quatf(angle: -.pi/3, axis: SIMD3<Float>(1, 0, 0.3))
+            physicsRoot.addChild(dir)
 
-            // Red mood point
             let pl1 = Entity()
             pl1.components.set(PointLightComponent(
-                color:             UIColor(red: 0.8, green: 0.15, blue: 0.05, alpha: 1.0),
-                intensity:         5000,
-                attenuationRadius: 25
-            ))
+                color: UIColor(red: 0.8, green: 0.15, blue: 0.05, alpha: 1), intensity: 5000, attenuationRadius: 25))
             pl1.position = SIMD3<Float>(-15, 8, -10)
             physicsRoot.addChild(pl1)
 
-            // Green mood point
             let pl2 = Entity()
             pl2.components.set(PointLightComponent(
-                color:             UIColor(red: 0.1, green: 0.6, blue: 0.1, alpha: 1.0),
-                intensity:         3000,
-                attenuationRadius: 20
-            ))
+                color: UIColor(red: 0.1, green: 0.6, blue: 0.1, alpha: 1), intensity: 3000, attenuationRadius: 20))
             pl2.position = SIMD3<Float>(12, 6, 15)
             physicsRoot.addChild(pl2)
 
-            if let scene = physicsRoot.scene {
-                gameState.scene = scene
-            }
+            if let scene = physicsRoot.scene { gameState.scene = scene }
         }
     }
 
-    // MARK: - Per-frame camera tick
+    // MARK: - Per-frame tick
 
     private func subscribeToSceneUpdates(scene: RealityKit.Scene) {
         sceneUpdateSubscription = scene.subscribe(to: SceneEvents.Update.self) { [self] _ in
@@ -292,28 +222,30 @@ struct GameView: View {
     }
 
     private func tickCamera() {
-        guard let player = playerEntity,
-              let camera = cameraEntity else { return }
+        guard let player = playerEntity, let camera = cameraEntity else { return }
 
-        let eyePos: SIMD3<Float>
-        if let eye = player.findEntity(named: "playerEye") {
-            eyePos = eye.position(relativeTo: nil)
-        } else {
-            eyePos = player.position(relativeTo: nil) + SIMD3<Float>(0, PlayerEntity.eyeHeight, 0)
-        }
+        let basePos = player.position(relativeTo: nil)
+        let eyePos  = basePos + SIMD3<Float>(0, PlayerEntity.eyeHeight, 0)
+
         camera.position    = eyePos
-        camera.orientation = simd_quatf(
-            angle: motionController.cameraYaw,
-            axis:  SIMD3<Float>(0, 1, 0)
-        )
+        camera.orientation = simd_quatf(angle: motionController.cameraYaw, axis: SIMD3<Float>(0,1,0))
 
         if let motion = player.components[PhysicsMotionComponent.self] {
             gameState.ballSpeed      = length(motion.linearVelocity)
-            gameState.playerPosition = player.position(relativeTo: nil)
+            gameState.playerPosition = basePos
         }
+
+        // Spatial audio: update listener + roach positions every frame
+        guard let root = player.parent else { return }
+        let roachEntities = root.children.filter { $0.components[RoachComponent.self] != nil }
+        audioManager.updatePositions(
+            listenerPosition: eyePos,
+            listenerYaw:      motionController.cameraYaw,
+            roachEntities:    Array(roachEntities)
+        )
     }
 
-    // MARK: - Game Logic
+    // MARK: - Game logic
 
     private func beginGame() {
         RoachAISystem.registerSystem()
@@ -321,33 +253,23 @@ struct GameView: View {
         MysteryBagComponent.registerComponent()
 
         gameState.startGame()
+        audioManager.startMusic()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             guard let scene = playerEntity?.scene else { return }
-
             subscribeToSceneUpdates(scene: scene)
-
             contactSystem = ContactSystem(
-                scene:         scene,
-                gameState:     gameState,
-                hapticManager: hapticManager
-            )
-
+                scene: scene, gameState: gameState,
+                hapticManager: hapticManager, audioManager: audioManager)
             if let arenaRoot = playerEntity?.parent {
                 MysteryBagEntity.spawnAll(in: arenaRoot)
-                escalationSystem = EscalationSystem(
-                    gameState:   gameState,
-                    roachParent: arenaRoot
-                )
+                escalationSystem = EscalationSystem(gameState: gameState, roachParent: arenaRoot)
                 bagTriggerSystem = BagTriggerSystem(
-                    scene:         scene,
-                    gameState:     gameState,
-                    hapticManager: hapticManager,
-                    bagParent:     arenaRoot
-                )
+                    scene: scene, gameState: gameState,
+                    hapticManager: hapticManager, audioManager: audioManager,
+                    bagParent: arenaRoot)
             }
         }
-
         spawnInitialRoaches()
         startRoachSpawning()
     }
@@ -355,42 +277,37 @@ struct GameView: View {
     private func spawnInitialRoaches() {
         guard let root = playerEntity?.parent else { return }
         for _ in 0..<2 {
-            root.addChild(RoachEntity.createChaser(at: RoachEntity.randomEdgePosition()))
+            let roach = RoachEntity.createChaser(at: RoachEntity.randomEdgePosition())
+            root.addChild(roach)
+            audioManager.addRoach(roach)
         }
     }
 
     private func startRoachSpawning() {
         roachSpawnTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
-            guard !gameState.isGameOver else {
-                roachSpawnTimer?.invalidate()
-                return
-            }
+            guard !gameState.isGameOver else { roachSpawnTimer?.invalidate(); return }
             guard let root = playerEntity?.parent else { return }
-            root.addChild(RoachEntity.createChaser(at: RoachEntity.randomEdgePosition()))
+            let roach = RoachEntity.createChaser(at: RoachEntity.randomEdgePosition())
+            root.addChild(roach)
+            audioManager.addRoach(roach)
         }
     }
 
     private func restartGame() {
         cleanup()
         gameState.reset()
-        // Assets are still in cache — restart is instant, no loading screen needed
+        audioManager = AudioManager()
         assetsLoading = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            startCountdown()
-        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { startCountdown() }
     }
 
     private func cleanup() {
-        sceneUpdateSubscription?.cancel()
-        sceneUpdateSubscription = nil
-        contactSystem?.cancel()
-        contactSystem = nil
-        bagTriggerSystem?.cancel()
-        bagTriggerSystem = nil
-        escalationSystem?.cancel()
-        escalationSystem = nil
-        roachSpawnTimer?.invalidate()
-        roachSpawnTimer = nil
+        sceneUpdateSubscription?.cancel(); sceneUpdateSubscription = nil
+        contactSystem?.cancel();          contactSystem = nil
+        bagTriggerSystem?.cancel();       bagTriggerSystem = nil
+        escalationSystem?.cancel();       escalationSystem = nil
+        roachSpawnTimer?.invalidate();    roachSpawnTimer = nil
+        audioManager.stop()
         gameState.reset()
     }
 }

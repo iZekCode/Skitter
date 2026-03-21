@@ -26,7 +26,7 @@ enum ArenaBuilder {
         (SIMD3<Float>( 18, 0.9, -12),  SIMD3<Float>(3,   1.8, 3)),
         (SIMD3<Float>(-18, 0.8, -18),  SIMD3<Float>(2,   1.6, 5)),
         (SIMD3<Float>(  8, 1.1, -20),  SIMD3<Float>(5,   2.2, 2.5)),
-        (SIMD3<Float>(-15, 0.7,  10),  SIMD3<Float>(3.5, 1.4, 3)),
+        (SIMD3<Float>(-15, 0.05,  10),  SIMD3<Float>(3.5, 0.1, 3)),
         (SIMD3<Float>( 20, 1.0,  15),  SIMD3<Float>(2.5, 2,   2.5)),
         (SIMD3<Float>(  0, 0.6, -15),  SIMD3<Float>(2,   1.2, 2)),
         (SIMD3<Float>( -8, 0.85, 22),  SIMD3<Float>(3,   1.7, 3)),

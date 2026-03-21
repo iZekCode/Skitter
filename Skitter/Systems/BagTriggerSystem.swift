@@ -5,7 +5,6 @@ import SwiftUI
 
 // MARK: - Trigger Label State
 
-/// Published to the HUD so it can show a brief label after a bag is triggered.
 @Observable
 class BagTriggerLabelState {
     var message:   String = ""
@@ -30,11 +29,11 @@ class BagTriggerLabelState {
 
 // MARK: - Bag Trigger System
 
-/// Listens for CollisionEvents between the player and mystery bags.
 class BagTriggerSystem {
     private var collisionSubscription: (any Cancellable)?
     private weak var gameState:     GameState?
     private weak var hapticManager: HapticManager?
+    private weak var audioManager:  AudioManager?
     private weak var bagParent:     Entity?
     let labelState = BagTriggerLabelState()
 
@@ -42,10 +41,12 @@ class BagTriggerSystem {
         scene:          RealityKit.Scene,
         gameState:      GameState,
         hapticManager:  HapticManager?,
+        audioManager:   AudioManager?,
         bagParent:      Entity
     ) {
         self.gameState     = gameState
         self.hapticManager = hapticManager
+        self.audioManager  = audioManager
         self.bagParent     = bagParent
 
         collisionSubscription = scene.subscribe(to: CollisionEvents.Began.self) { [weak self] event in
@@ -85,10 +86,8 @@ class BagTriggerSystem {
 
         gameState.bagsRemaining = max(0, gameState.bagsRemaining - 1)
 
-        // ── Swap the bag's visual to the reveal model ─────────────────────────
-        // Remove the black plastic children, add the reveal model in their place
+        // Swap visual to reveal model
         for child in bagEntity.children { child.removeFromParent() }
-
         if let reveal = MysteryBagEntity.createRevealEntity(for: bagType) {
             reveal.position = .zero
             bagEntity.addChild(reveal)
@@ -96,24 +95,23 @@ class BagTriggerSystem {
 
         switch bagType {
 
-        // ── WIN ───────────────────────────────────────────────────────────────
         case .baygon:
             labelState.show(message: "BAYGON!", isWin: true)
             hapticManager?.playBaygonWin()
+            audioManager?.playCorrect()
 
-            // Short pause so the player sees both the label and the byegone model
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
                 gameState.triggerWin()
-                self?.hapticManager?.playGameOver()  // ramp-down for transition feel
+                self?.hapticManager?.playGameOver()
+                self?.audioManager?.playGameOverWin()
             }
 
-        // ── BAIT ──────────────────────────────────────────────────────────────
         case .bait:
             gameState.baitTriggeredCount += 1
             labelState.show(message: "TUMPUKAN BUSUK", isWin: false)
             hapticManager?.playBaitTrigger()
+            audioManager?.playWrong()
 
-            // Remove the food pile reveal after 1.5 s
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 bagEntity.removeFromParent()
             }
