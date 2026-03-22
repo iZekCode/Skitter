@@ -283,6 +283,7 @@ struct GameView: View {
     // MARK: - Game logic
 
     private func beginGame() {
+        RoachAISystem.isGameOver = false  
         RoachAISystem.registerSystem()
         RoachComponent.registerComponent()
         MysteryBagComponent.registerComponent()
@@ -295,7 +296,12 @@ struct GameView: View {
             subscribeToSceneUpdates(scene: scene)
             contactSystem = ContactSystem(
                 scene: scene, gameState: gameState,
-                hapticManager: hapticManager, audioManager: audioManager)
+                hapticManager: hapticManager, audioManager: audioManager,
+                onGameOver: {
+                    motionController.freeze()
+                    freezeAllRoaches()    
+                }
+            )
             puddleSystem = PuddleSystem(scene: scene)
             if let arenaRoot = playerEntity?.parent {
                 MysteryBagEntity.spawnAll(in: arenaRoot)
@@ -306,6 +312,7 @@ struct GameView: View {
                     bagParent: arenaRoot)
                 bagTriggerSystem?.freezePlayer = {
                     motionController.freeze()
+                    freezeAllRoaches()
                 }
             }
         }
@@ -331,9 +338,25 @@ struct GameView: View {
             audioManager.addRoach(roach)
         }
     }
+    
+    private func freezeAllRoaches() {
+        RoachAISystem.isGameOver = true
+
+        // Zero velocity on every roach so they stop mid-step
+        guard let root = playerEntity?.parent else { return }
+        for child in root.children {
+            guard child.components[RoachComponent.self] != nil else { continue }
+            if var motion = child.components[PhysicsMotionComponent.self] {
+                motion.linearVelocity  = .zero
+                motion.angularVelocity = .zero
+                child.components[PhysicsMotionComponent.self] = motion
+            }
+        }
+    }
 
     private func restartGame() {
         cleanup()
+        RoachAISystem.isGameOver = false 
         motionController.unfreeze()
         gameState.reset()
         audioManager = AudioManager()

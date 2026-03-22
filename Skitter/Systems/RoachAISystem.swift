@@ -13,6 +13,8 @@ import Foundation
 /// but still respect boundary walls.
 class RoachAISystem: System {
     static let query = EntityQuery(where: .has(RoachComponent.self))
+    
+    static var isGameOver: Bool = false
 
     // MARK: - Separation tuning
 
@@ -58,6 +60,7 @@ class RoachAISystem: System {
     // MARK: - Update
 
     func update(context: SceneUpdateContext) {
+        guard !Self.isGameOver else { return }
         guard let ball = context.scene.findEntity(named: "player") else { return }
         let ballPos = ball.position(relativeTo: nil)
 

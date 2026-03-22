@@ -12,14 +12,17 @@ class ContactSystem {
     private weak var gameState:     GameState?
     private weak var hapticManager: HapticManager?
     private weak var audioManager:  AudioManager?
+    let onGameOver: (() -> Void)?
 
     init(scene: RealityKit.Scene,
          gameState: GameState,
          hapticManager: HapticManager?,
-         audioManager: AudioManager?) {
+         audioManager: AudioManager?,
+         onGameOver: (() -> Void)? = nil) {
         self.gameState     = gameState
         self.hapticManager = hapticManager
         self.audioManager  = audioManager
+        self.onGameOver    = onGameOver
 
         collisionSubscription = scene.subscribe(to: CollisionEvents.Began.self) { [weak self] event in
             self?.handleCollision(event)
@@ -43,6 +46,7 @@ class ContactSystem {
                 gameState.triggerGameOver()
                 self?.hapticManager?.playGameOver()
                 self?.audioManager?.playGameOverLose()
+                self?.onGameOver?() 
             }
             return
         }
