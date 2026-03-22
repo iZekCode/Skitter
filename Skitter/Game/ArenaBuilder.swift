@@ -30,6 +30,16 @@ enum ArenaBuilder {
         (SIMD3<Float>( 20, 1.0,  15),  SIMD3<Float>(2.5, 2,   2.5)),
         (SIMD3<Float>(  0, 0.6, -15),  SIMD3<Float>(2,   1.2, 2)),
         (SIMD3<Float>( -8, 0.85, 22),  SIMD3<Float>(3,   1.7, 3)),
+        (SIMD3<Float>( 15, 0.9,  -5),  SIMD3<Float>(3,   1.8, 3)),
+        (SIMD3<Float>(-24, 0.05, -8),  SIMD3<Float>(3.5, 0.1, 3.5)),
+        (SIMD3<Float>(  5, 0.05, 24),  SIMD3<Float>(4,   0.1, 4)),
+        (SIMD3<Float>( -5, 1.0, -24),  SIMD3<Float>(0.3, 2,   5)),
+        (SIMD3<Float>(-22, 1.0,  18),  SIMD3<Float>(0.3, 2,   5)),
+        (SIMD3<Float>(  5, 0.05,  1),  SIMD3<Float>(3.5, 0.1, 3.5)),
+        (SIMD3<Float>( -2, 1.0,  -2),  SIMD3<Float>(0.3, 2,   5)),
+        (SIMD3<Float>( -25, 1.0, 25),  SIMD3<Float>(3,   2,   3)),
+        (SIMD3<Float>(  20, 0.05,13),  SIMD3<Float>(3.5, 0.1, 3.5)),
+        (SIMD3<Float>( 25, 0.75,  25),  SIMD3<Float>(2.5, 1.5, 4)),
     ]
 
     // MARK: - Slot → model mapping
@@ -47,6 +57,16 @@ enum ArenaBuilder {
         SlotModel(name: "oil_drum",     solid: true),
         SlotModel(name: "trash_pile",   solid: true),
         SlotModel(name: "fence",        solid: true),
+        SlotModel(name: "trash_pile",   solid: true),
+        SlotModel(name: "oil_puddle",   solid: false),
+        SlotModel(name: "oil_puddle",   solid: false),
+        SlotModel(name: "trash_pile",   solid: true),
+        SlotModel(name: "fence",        solid: true),
+        SlotModel(name: "oil_puddle",   solid: false),
+        SlotModel(name: "fence",        solid: true),
+        SlotModel(name: "trash_pile",   solid: true),
+        SlotModel(name: "oil_puddle",   solid: false),
+        SlotModel(name: "trash_barrel", solid: true),
     ]
 
     // MARK: - Caches
