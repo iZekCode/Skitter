@@ -304,6 +304,9 @@ struct GameView: View {
                     scene: scene, gameState: gameState,
                     hapticManager: hapticManager, audioManager: audioManager,
                     bagParent: arenaRoot)
+                bagTriggerSystem?.freezePlayer = {
+                    motionController.freeze()
+                }
             }
         }
         spawnInitialRoaches()
@@ -331,6 +334,7 @@ struct GameView: View {
 
     private func restartGame() {
         cleanup()
+        motionController.unfreeze()
         gameState.reset()
         audioManager = AudioManager()
         assetsLoading = false

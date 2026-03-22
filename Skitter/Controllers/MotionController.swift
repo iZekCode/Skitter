@@ -12,10 +12,11 @@ class MotionController: ObservableObject {
     private weak var player: ModelEntity?
 
     /// Last joystick axes set by applyJoystickInput.
-    /// Stored so tickMovement() can re-apply them every frame even when
-    /// the gesture's onChanged stops firing (thumb held still).
     private var joystickDX: Float = 0
     private var joystickDZ: Float = 0
+
+    /// When true, tickMovement() is a no-op and player velocity is zeroed.
+    private(set) var frozen: Bool = false
 
     // MARK: - Tuning
 
@@ -30,25 +31,46 @@ class MotionController: ObservableObject {
         player = entity
     }
 
+    // MARK: - Freeze / Unfreeze
+
+    /// Instantly stops all player movement and ignores further input.
+    /// Call when the game is won or lost.
+    func freeze() {
+        frozen     = true
+        joystickDX = 0
+        joystickDZ = 0
+
+        // Zero out physics velocity so the player stops immediately
+        guard let player = player else { return }
+        var motion = player.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
+        motion.linearVelocity  = .zero
+        motion.angularVelocity = .zero
+        player.components[PhysicsMotionComponent.self] = motion
+    }
+
+    /// Re-enables movement (call on game restart).
+    func unfreeze() {
+        frozen = false
+    }
+
     // MARK: - Look (right thumb)
 
     func applyLookDelta(screenDX: Float) {
+        guard !frozen else { return }
         cameraYaw -= screenDX * lookSensitivity
     }
 
     // MARK: - Movement (left thumb / joystick)
 
-    /// Called by the gesture's onChanged — just stores the axes.
-    /// Actual velocity is applied every frame by tickMovement().
     func applyJoystickInput(dx: Float, dz: Float) {
+        guard !frozen else { return }
         joystickDX = dx
         joystickDZ = dz
     }
 
     /// Call every frame from tickCamera (SceneEvents.Update).
-    /// Re-applies the stored joystick axes so the character keeps
-    /// moving even when the thumb is held still and onChanged stops firing.
     func tickMovement() {
+        guard !frozen else { return }
         guard let player = player else { return }
         guard abs(joystickDX) > 0.001 || abs(joystickDZ) > 0.001 else { return }
 

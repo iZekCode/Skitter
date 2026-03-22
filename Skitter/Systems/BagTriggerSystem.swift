@@ -35,6 +35,7 @@ class BagTriggerSystem {
     private weak var hapticManager: HapticManager?
     private weak var audioManager:  AudioManager?
     private weak var bagParent:     Entity?
+    var freezePlayer: (() -> Void)?
     let labelState = BagTriggerLabelState()
 
     init(
@@ -99,6 +100,7 @@ class BagTriggerSystem {
             labelState.show(message: "BYEGONE", isWin: true)
             hapticManager?.playBaygonWin()
             audioManager?.playCorrect()
+            freezePlayer?()
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
                 gameState.triggerWin()
