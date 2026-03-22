@@ -31,15 +31,15 @@ class RoachAISystem: System {
 
     /// How far (meters) an obstacle starts repelling a roach.
     /// Giant roaches use a larger radius to account for their bigger body.
-    private static let chaserRepelRadius:  Float = 5.0
-    private static let giantRepelRadius:   Float = 7.0
-    private static let flyingRepelRadius:  Float = 5.0  // only walls, not floor obstacles
+    private static let chaserRepelRadius:  Float = 1.0
+    private static let giantRepelRadius:   Float = 1.0
+    private static let flyingRepelRadius:  Float = 1.0  // only walls, not floor obstacles
 
     /// Scalar multiplier on the repulsion vector before blending.
     private static let repelStrength:      Float = 12.0
 
     /// Arena wall repulsion starts this many meters from each wall.
-    private static let wallRepelRadius:    Float = 4.0
+    private static let wallRepelRadius:    Float = 1.0
 
     // MARK: - Precomputed obstacle data
 
