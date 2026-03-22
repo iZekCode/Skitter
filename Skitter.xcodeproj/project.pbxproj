@@ -54,7 +54,6 @@
 		AA000012 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012 /* HapticManager.swift */; };
 		AA000013 /* HUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000013 /* HUDView.swift */; };
 		AA000014 /* MainMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000014 /* MainMenuView.swift */; };
-		AA000015 /* GameOverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000015 /* GameOverView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -105,7 +104,6 @@
 		AB000012 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 		AB000013 /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
 		AB000014 /* MainMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuView.swift; sourceTree = "<group>"; };
-		AB000015 /* GameOverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverView.swift; sourceTree = "<group>"; };
 		AB000016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AC000001 /* Skitter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Skitter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -260,7 +258,6 @@
 			isa = PBXGroup;
 			children = (
 				AB000014 /* MainMenuView.swift */,
-				AB000015 /* GameOverView.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -379,7 +376,6 @@
 				2748FA532F6E946A002A2B97 /* FogSphere.swift in Sources */,
 				AA000014 /* MainMenuView.swift in Sources */,
 				27D26A062F6C027600723120 /* EscalationSystem.swift in Sources */,
-				AA000015 /* GameOverView.swift in Sources */,
 				273F5D4C2F6CDD8C004F5D81 /* DualThumbControlView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

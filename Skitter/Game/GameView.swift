@@ -121,17 +121,32 @@ struct GameView: View {
             Color.black.opacity(0.75)
             VStack(spacing: 24) {
                 Text(gameState.isWin ? "YOU WIN" : "GAME OVER")
-                    .font(.system(size: 18, weight: .bold, design: .monospaced))
+                    .font(.system(size: 36, weight: .bold, design: .monospaced))
                     .foregroundStyle(
                         gameState.isWin
                             ? Color(red: 0.3, green: 0.9, blue: 0.3)
                             : Color(red: 0.9, green: 0.2, blue: 0.2)
                     )
                     .kerning(8)
-                statCard(title: "SURVIVED", value: gameState.formattedTime)
+                    .padding(.bottom, 20)
+
+                // Stats
+                HStack(spacing: 10) {
+                    statCard(title: "RESULT",      value: gameState.isWin ? "WIN" : "LOSE")
+                    statCard(title: "SURVIVED",    value: gameState.formattedTime)
+                    statCard(title: "BAGS OPENED", value: "\(5 - gameState.bagsRemaining)/5")
+                }
+                .frame(maxWidth: 600)
+
                 HStack(spacing: 16) {
-                    Button { restartGame() } label: {
-                        Text("PLAY AGAIN")
+                    Button {
+                        appState.endGame(
+                            survivedTime: gameState.elapsedTime,
+                            isWin:        gameState.isWin,
+                            bagsOpened:   5 - gameState.bagsRemaining
+                        )
+                    } label: {
+                        Text("MENU")
                             .font(.system(size: 16, weight: .bold, design: .monospaced))
                             .foregroundStyle(.black)
                             .frame(maxWidth: .infinity)
@@ -139,16 +154,9 @@ struct GameView: View {
                             .background(Color(red: 0.45, green: 0.65, blue: 0.25))
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
-                    Button { appState.endGame(survivedTime: gameState.elapsedTime) } label: {
-                        Text("MENU")
-                            .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(.white.opacity(0.6))
-                            .padding(.vertical, 14).padding(.horizontal, 24)
-                            .background(Color.white.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
                 }
-                .frame(maxWidth: 400)
+                .frame(maxWidth: 200)
+                .padding(.top, 20)
             }
             .padding(40)
         }
@@ -158,14 +166,18 @@ struct GameView: View {
 
     private func statCard(title: String, value: String) -> some View {
         VStack(spacing: 6) {
-            Text(title)
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.4)).kerning(2)
             Text(value)
-                .font(.system(size: 28, weight: .bold, design: .monospaced))
+                .font(.system(size: 18, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+            Text(title)
+                .font(.system(size: 8, weight: .medium, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.4))
+                .kerning(1)
         }
-        .frame(width: 140, height: 80)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
         .background(Color.white.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
@@ -354,15 +366,12 @@ struct GameView: View {
             }
         }
     }
-
-    private func restartGame() {
-        cleanup()
-        RoachAISystem.isGameOver = false 
-        motionController.unfreeze()
-        gameState.reset()
-        audioManager = AudioManager()
-        assetsLoading = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { startCountdown() }
+    
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes     = Int(time) / 60
+        let seconds     = Int(time) % 60
+        let milliseconds = Int((time.truncatingRemainder(dividingBy: 1)) * 100)
+        return String(format: "%02d:%02d.%02d", minutes, seconds, milliseconds)
     }
 
     private func cleanup() {

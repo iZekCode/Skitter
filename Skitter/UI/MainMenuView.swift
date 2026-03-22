@@ -20,39 +20,11 @@ struct MainMenuView: View {
             )
             .ignoresSafeArea()
 
-            // Subtle green gas particles (simulated with circles)
-            gasParticles
-
             VStack(spacing: 0) {
                 Spacer()
 
                 // Logo section
                 VStack(spacing: 8) {
-                    // Ball icon
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [
-                                    Color.white.opacity(0.15),
-                                    Color(red: 0.6, green: 0.55, blue: 0.3).opacity(0.08),
-                                    Color.clear
-                                ],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: 30
-                            )
-                        )
-                        .frame(width: 50, height: 50)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                        )
-                        .scaleEffect(pulseAnimation ? 1.05 : 0.95)
-                        .animation(
-                            .easeInOut(duration: 2.0).repeatForever(autoreverses: true),
-                            value: pulseAnimation
-                        )
-
                     // Title
                     Text("SKITTER")
                         .font(.system(size: 42, weight: .black, design: .monospaced))
@@ -64,22 +36,26 @@ struct MainMenuView: View {
                         .foregroundStyle(.white.opacity(0.25))
                         .kerning(6)
                 }
-                .opacity(showTitle ? 1 : 0)
-                .offset(y: showTitle ? 0 : 10)
 
+                Spacer()
+                
                 // Best score
-                if appState.bestTime > 0 {
-                    VStack(spacing: 4) {
-                        Text("BEST")
+                if appState.bestWinTime > 0 {
+                    VStack(spacing: 6) {
+                        Text("BEST RUN")
                             .font(.system(size: 9, weight: .semibold, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.3))
                             .kerning(3)
 
-                        Text(formatTime(appState.bestTime))
+                        Text(formatTime(appState.bestWinTime))
                             .font(.system(size: 22, weight: .bold, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.5))
+
+                        Text("\(appState.bestBagsOpened)/5 BAGS OPENED")
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.25))
+                            .kerning(2)
                     }
-                    .padding(.top, 24)
                 }
 
                 Spacer()
@@ -111,7 +87,8 @@ struct MainMenuView: View {
                     .frame(maxWidth: 360)
                 }
                 .padding(.horizontal, 40)
-                .padding(.bottom, 50)
+                
+                Spacer()
             }
         }
         .onAppear {
@@ -122,24 +99,10 @@ struct MainMenuView: View {
         }
     }
 
-    private var gasParticles: some View {
-        ZStack {
-            ForEach(0..<6, id: \.self) { i in
-                Circle()
-                    .fill(Color(red: 0.1, green: 0.4, blue: 0.1).opacity(0.03))
-                    .frame(width: CGFloat.random(in: 80...200))
-                    .offset(
-                        x: CGFloat.random(in: -200...200),
-                        y: CGFloat.random(in: -100...200)
-                    )
-                    .blur(radius: 30)
-            }
-        }
-    }
-
     private func formatTime(_ time: TimeInterval) -> String {
-        let minutes = Int(time) / 60
-        let seconds = Int(time) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
+        let minutes     = Int(time) / 60
+        let seconds     = Int(time) % 60
+        let milliseconds = Int((time.truncatingRemainder(dividingBy: 1)) * 100)
+        return String(format: "%02d:%02d.%02d", minutes, seconds, milliseconds)
     }
 }

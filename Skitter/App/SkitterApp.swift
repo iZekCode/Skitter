@@ -27,9 +27,6 @@ struct ContentView: View {
             case .playing:
                 GameView()
                     .transition(.opacity)
-            case .gameOver:
-                GameOverView()
-                    .transition(.opacity)
             }
         }
         .animation(.easeInOut(duration: 0.4), value: appState.currentScreen)
