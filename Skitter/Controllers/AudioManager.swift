@@ -239,6 +239,14 @@ class AudioManager {
     private func scheduleLooping(player: AVAudioPlayerNode, buffer: AVAudioPCMBuffer) {
         player.scheduleBuffer(buffer, at: nil, options: .loops)
     }
+    
+    func stopAllRoachAudio() {
+        for (_, audio) in roachNodes {
+            audio.player.stop()
+        }
+        // Don't detach or remove — just stop playback.
+        // Nodes stay registered so removeRoach() can still clean up cleanly on restart.
+    }
 
     // MARK: - Teardown
 

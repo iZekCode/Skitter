@@ -283,7 +283,7 @@ struct GameView: View {
     // MARK: - Game logic
 
     private func beginGame() {
-        RoachAISystem.isGameOver = false  
+        RoachAISystem.isGameOver = false
         RoachAISystem.registerSystem()
         RoachComponent.registerComponent()
         MysteryBagComponent.registerComponent()
@@ -341,6 +341,7 @@ struct GameView: View {
     
     private func freezeAllRoaches() {
         RoachAISystem.isGameOver = true
+        audioManager.stopAllRoachAudio() 
 
         // Zero velocity on every roach so they stop mid-step
         guard let root = playerEntity?.parent else { return }
