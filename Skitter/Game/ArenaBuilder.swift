@@ -59,18 +59,12 @@ enum ArenaBuilder {
     /// Must be called on the main actor before buildArena().
     static func preload() {
         // ── Floor texture ────────────────────────────────────────────────────
-        // Load via UIImage → CGImage → TextureResource(image:) so the texture
-        // is fully resident in memory with no async GPU-upload step.
-        // TextureResource.load(contentsOf:) schedules an async GPU upload that
-        // may not complete before the first rendered frame — this avoids that.
         if floorTexture == nil {
-            // UIImage(named:) only resolves Asset Catalog entries.
-            // floor.jpg is a loose bundle resource — must use Bundle.main URL.
             let uiImage: UIImage? = {
                 if let url = Bundle.main.url(forResource: "floor", withExtension: "jpg") {
                     return UIImage(contentsOfFile: url.path)
                 }
-                return UIImage(named: "floor") // fallback if ever moved to .xcassets
+                return UIImage(named: "floor")
             }()
 
             if let uiImage,
@@ -110,9 +104,8 @@ enum ArenaBuilder {
     // MARK: - Floor
 
     private static func createFloor() -> ModelEntity {
-        // Build a tiled quad manually so the texture repeats instead of stretching.
         let h:     Float = arenaSize / 2.0
-        let tiles: Float = 15.0    // 15×15 repeats across 60 m
+        let tiles: Float = 15.0
 
         var desc = MeshDescriptor(name: "tiledFloor")
         desc.positions = MeshBuffer([
@@ -133,12 +126,9 @@ enum ArenaBuilder {
         ])
         desc.primitives = .triangles([0, 2, 1, 1, 2, 3])
 
-        // Fall back to a plain plane if MeshDescriptor fails (e.g. on Simulator)
         let mesh = (try? MeshResource.generate(from: [desc]))
                    ?? MeshResource.generatePlane(width: arenaSize, depth: arenaSize)
 
-        // UnlitMaterial: bypasses IBL entirely — always visible from frame 1.
-        // Tint is set even when texture is present so the fallback is never black.
         var mat = UnlitMaterial()
         let tint = UIColor(red: 0.35, green: 0.28, blue: 0.18, alpha: 1.0)
         if let tex = floorTexture {
@@ -208,19 +198,34 @@ enum ArenaBuilder {
         node.name = slot.name == "oil_puddle" ? "puddle_\(index)" : "obstacle_\(index)"
         node.position = config.position
 
+        // Build the collision shape — derived from actual post-fit visual bounds
+        // so the box always matches the mesh regardless of the model's raw proportions.
+        // Root cause: fitModel scales uniformly by height only, so a wide fence mesh
+        // ends up much larger in X/Z than config.size, causing invisible passthrough gaps.
+        let collisionShape: ShapeResource
         if let tmpl = modelCache[slot.name] {
             let v = tmpl.clone(recursive: true)
             fitModel(v, to: config.size)
             node.addChild(v)
+
+            let b = v.visualBounds(relativeTo: node)
+            let ext = b.extents.x > 0.01 ? b.extents : config.size
+            // offsetBy centres the box at the visual centroid in node space
+            collisionShape = ShapeResource
+                .generateBox(width: ext.x, height: ext.y, depth: ext.z)
+                .offsetBy(rotation: simd_quatf(ix: 0, iy: 0, iz: 0, r: 1),
+                          translation: b.center)
         } else {
             node.addChild(fallbackBox(size: config.size, index: index))
+            collisionShape = ShapeResource.generateBox(
+                width: config.size.x, height: config.size.y, depth: config.size.z)
         }
 
         let mode: CollisionComponent.Mode = slot.solid ? .default : .trigger
         let mask: CollisionGroup = slot.solid
             ? [CollisionGroups.ball, CollisionGroups.roach] : CollisionGroups.ball
         node.components.set(CollisionComponent(
-            shapes: [.generateBox(width: config.size.x, height: config.size.y, depth: config.size.z)],
+            shapes: [collisionShape],
             mode: mode, filter: CollisionFilter(group: CollisionGroups.obstacle, mask: mask)
         ))
         if slot.solid {
@@ -235,9 +240,14 @@ enum ArenaBuilder {
 
     private static func fitModel(_ e: Entity, to s: SIMD3<Float>) {
         let b     = e.visualBounds(relativeTo: e)
-        let scale = b.extents.y > 0.001 ? s.y / b.extents.y : 1.0
+        let rawHeight = b.extents.y
+
+        let scale: Float = rawHeight > 0.001 ? s.y / rawHeight : 1.0
         e.scale    = SIMD3<Float>(repeating: scale)
-        e.position = SIMD3<Float>(0, -(b.min.y * scale) - s.y / 2.0, 0)
+
+        // Shift so bottom sits at y = 0 in parent (bag container) space
+        let scaledMinY  = b.min.y * scale
+        e.position = SIMD3<Float>(0, -scaledMinY - s.y / 2.0, 0)
     }
 
     private static func fallbackBox(size: SIMD3<Float>, index: Int) -> ModelEntity {
