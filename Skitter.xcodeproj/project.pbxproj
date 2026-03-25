@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2702E1C62F741DD70033E32A /* Asset.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2702E1C52F741DD70033E32A /* Asset.xcassets */; };
 		2715761A2F6EC2A100418487 /* PuddleSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271576192F6EC29E00418487 /* PuddleSystem.swift */; };
 		273F5D4C2F6CDD8C004F5D81 /* DualThumbControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */; };
 		2748FA472F6E36CB002A2B97 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748FA462F6E36C7002A2B97 /* AudioManager.swift */; };
@@ -57,6 +58,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2702E1C52F741DD70033E32A /* Asset.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Asset.xcassets; sourceTree = "<group>"; };
 		271576192F6EC29E00418487 /* PuddleSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PuddleSystem.swift; sourceTree = "<group>"; };
 		273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualThumbControlView.swift; sourceTree = "<group>"; };
 		2748FA462F6E36C7002A2B97 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
@@ -160,6 +162,7 @@
 				27A702F92F6D57B6002F6B06 /* Models */,
 				27A703002F6D57B6002F6B06 /* Sounds */,
 				27A703012F6D57B6002F6B06 /* floor.jpg */,
+				2702E1C52F741DD70033E32A /* Asset.xcassets */,
 			);
 			path = Assets;
 			sourceTree = "<group>";
@@ -332,6 +335,7 @@
 				27A7031A2F6D60AF002F6B06 /* roach_2_animated.usdz in Resources */,
 				27A7031B2F6D60AF002F6B06 /* roach_2.usdz in Resources */,
 				2748FA4D2F6E8116002A2B97 /* food_pile_image.png in Resources */,
+				2702E1C62F741DD70033E32A /* Asset.xcassets in Resources */,
 				27A7031C2F6D60AF002F6B06 /* roach_1.usdz in Resources */,
 				27A7030C2F6D57B6002F6B06 /* gameover_lose.wav in Resources */,
 				27A7030D2F6D57B6002F6B06 /* gameover_win.wav in Resources */,
@@ -505,6 +509,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZU2326AL7G;
@@ -537,6 +542,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZU2326AL7G;
