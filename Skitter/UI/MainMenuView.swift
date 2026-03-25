@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Dark-themed main menu with play button and best score
 struct MainMenuView: View {
     @Environment(AppState.self) private var appState
     @State private var pulseAnimation = false
@@ -8,7 +7,7 @@ struct MainMenuView: View {
 
     var body: some View {
         ZStack {
-            // Dark background with subtle gradient
+            // Dark background
             LinearGradient(
                 colors: [
                     Color(red: 0.02, green: 0.02, blue: 0.04),
@@ -25,7 +24,6 @@ struct MainMenuView: View {
 
                 // Logo section
                 VStack(spacing: 8) {
-                    // Title
                     Text("SKITTER")
                         .font(.system(size: 42, weight: .black, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.9))

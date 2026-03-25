@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// Five dot indicators — one disappears each time a bag is triggered.
-/// All bags look the same so this only tells you how many are left, not where.
 struct BagsRemainingView: View {
     let bagsRemaining: Int
     let total: Int = 5

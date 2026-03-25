@@ -6,9 +6,7 @@ struct VignetteView: View {
     // MARK: - Tunable
 
     private static let maxBait:    Int    = 4
-    /// Opacity of the gas at each bait level (index 0 = bait 1)
     private static let opacitySteps: [Double] = [0.30, 0.55, 0.75, 0.90]
-    /// How far each gradient reaches inward as a fraction of screen (0 = edge only, 0.5 = halfway)
     private static let reachSteps:   [Double] = [0.12, 0.25, 0.40, 0.55]
     private static let gasColor = Color(red: 0.05, green: 0.40, blue: 0.05)
 

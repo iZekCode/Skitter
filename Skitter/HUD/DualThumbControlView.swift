@@ -1,48 +1,37 @@
 import SwiftUI
 
-/// Full-screen invisible overlay split into two touch zones.
-///
-/// Left half  — floating virtual joystick.
-///              Reports normalised (–1…+1) dx / dz axes via `onMovement`.
-///              The joystick appears wherever the thumb first touches and
-///              disappears when the thumb lifts.
-///
-/// Right half — camera look drag.
-///              Reports screen-space X delta (points) via `onLook` each frame.
-///              Vertical drag is intentionally ignored — the arena is flat and
-///              vertical look adds motion sickness with no gameplay benefit.
 struct DualThumbControlView: View {
 
-    /// Left thumb: normalised joystick axes (dx right, dz down/back).
+    /// Left thumb
     let onMovement: (_ dx: Float, _ dz: Float) -> Void
 
-    /// Right thumb: screen-X delta in points this frame (positive = drag right).
+    /// Right thumb
     let onLook: (_ screenDX: Float) -> Void
 
-    // ── Joystick geometry ──────────────────────────────────────────────────
+    // Joystick geometry
     private let baseRadius:  CGFloat = 58
     private let knobRadius:  CGFloat = 22
     private let deadZone:    Float   = 0.06
 
-    // ── Joystick state ─────────────────────────────────────────────────────
+    // Joystick state
     @State private var joystickOrigin: CGPoint = .zero
     @State private var knobOffset:     CGSize  = .zero
     @State private var joystickActive: Bool    = false
 
-    // ── Look state ─────────────────────────────────────────────────────────
+    // Look state
     @State private var prevLookTranslationX: CGFloat = 0
     @State private var lookActive: Bool = false
 
     var body: some View {
         HStack(spacing: 0) {
 
-            // ── Left zone ────────────────────────────────────────────────────
+            // Left zone
             ZStack {
                 Color.clear
                     .contentShape(Rectangle())
                     .gesture(movementGesture)
 
-                // Joystick visual — floats to wherever the thumb touched
+                // Joystick visual
                 if joystickActive {
                     ZStack {
                         // Base ring
@@ -61,9 +50,9 @@ struct DualThumbControlView: View {
                             .offset(knobOffset)
                     }
                     .position(joystickOrigin)
-                    .allowsHitTesting(false)   // gesture is on the parent
+                    .allowsHitTesting(false)
                 } else {
-                    // Idle hint — faint ring in the bottom-left corner
+                    // Idle ring
                     Circle()
                         .stroke(Color.white.opacity(0.10), lineWidth: 1)
                         .frame(width: baseRadius * 2, height: baseRadius * 2)
@@ -76,13 +65,13 @@ struct DualThumbControlView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // ── Right zone ───────────────────────────────────────────────────
+            // Right zone
             ZStack {
                 Color.clear
                     .contentShape(Rectangle())
                     .gesture(lookGesture)
 
-                // Idle hint — small crosshair icon in the centre
+                // Idle hint
                 if !lookActive {
                     lookHint
                         .allowsHitTesting(false)
@@ -154,7 +143,6 @@ struct DualThumbControlView: View {
     // MARK: - Look hint
 
     private var lookHint: some View {
-        // A minimal crosshair drawn with two thin lines
         ZStack {
             Rectangle()
                 .fill(Color.white.opacity(0.12))

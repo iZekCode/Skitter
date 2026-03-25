@@ -1,21 +1,13 @@
 import SwiftUI
 
-/// In-game HUD overlay — Phase 2 layout
-///
-/// Top-left:  Mini map + bags remaining
-/// Top-right: Timer
-/// Center:    Trigger label (fades in/out after bag collision)
 struct HUDView: View {
     let gameState: GameState
     let labelState: BagTriggerLabelState
-
-    /// Camera yaw from MotionController — passed through to MiniMapView for the
-    /// radar cone. Updated every frame in GameView.tickCamera.
     let cameraYaw: Float
 
     var body: some View {
         ZStack {
-            // ── Top bar ───────────────────────────────────────────────────────
+            // Top bar
             VStack {
                 HStack(alignment: .top) {
 
@@ -23,8 +15,7 @@ struct HUDView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         MiniMapView(
                             playerPosition: playerPosition,
-                            cameraYaw:      cameraYaw,
-                            baitCount:      gameState.baitTriggeredCount
+                            cameraYaw:      cameraYaw
                         )
                         BagsRemainingView(bagsRemaining: gameState.bagsRemaining)
                     }
@@ -48,12 +39,11 @@ struct HUDView: View {
                 Spacer()
             }
 
-            // ── Center — trigger label ────────────────────────────────────────
+            // Center — trigger label
             TriggerLabelView(labelState: labelState)
         }
     }
 
-    /// Pull player position from gameState for the minimap.
     private var playerPosition: SIMD3<Float> {
         gameState.playerPosition
     }

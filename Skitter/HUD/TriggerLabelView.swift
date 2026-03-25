@@ -1,8 +1,6 @@
 import SwiftUI
 import UIKit
 
-/// Brief center-screen label shown right after a bag collision.
-/// Auto-hides after ~1.8 seconds via BagTriggerLabelState.
 struct TriggerLabelView: View {
     let labelState: BagTriggerLabelState
 
@@ -20,7 +18,7 @@ struct TriggerLabelView: View {
         if labelState.isVisible {
             VStack(spacing: 10) {
 
-                // ── Item image ───────────────────────────────────────────────
+                // Item image
                 if let url = Bundle.main.url(forResource: imageName, withExtension: "png"),
                    let uiImage = UIImage(contentsOfFile: url.path) {
                     Image(uiImage: uiImage)
@@ -34,7 +32,7 @@ struct TriggerLabelView: View {
                         )
                 }
 
-                // ── Label text ───────────────────────────────────────────────
+                // Label text 
                 Text(labelState.message)
                     .font(.system(size: 22, weight: .black, design: .monospaced))
                     .foregroundStyle(accentColor)
