@@ -248,6 +248,7 @@ struct GameView: View {
         }
     }
 
+    /// set orientasi kamera
     private func tickCamera() {
         guard let player = playerEntity, let camera = cameraEntity else { return }
 

@@ -2,7 +2,6 @@ import RealityKit
 import Foundation
 import simd
 
-/// Translates joystick and look-drag input into player velocity + camera yaw.
 class MotionController: ObservableObject {
 
     // MARK: - State
@@ -11,11 +10,9 @@ class MotionController: ObservableObject {
 
     private weak var player: ModelEntity?
 
-    /// Last joystick axes set by applyJoystickInput.
     private var joystickDX: Float = 0
     private var joystickDZ: Float = 0
 
-    /// When true, tickMovement() is a no-op and player velocity is zeroed.
     private(set) var frozen: Bool = false
 
     // MARK: - Tuning
@@ -31,16 +28,13 @@ class MotionController: ObservableObject {
         player = entity
     }
 
-    // MARK: - Freeze / Unfreeze
+    // MARK: - Freeze/Unfreeze
 
-    /// Instantly stops all player movement and ignores further input.
-    /// Call when the game is won or lost.
     func freeze() {
         frozen     = true
         joystickDX = 0
         joystickDZ = 0
 
-        // Zero out physics velocity so the player stops immediately
         guard let player = player else { return }
         var motion = player.components[PhysicsMotionComponent.self] ?? PhysicsMotionComponent()
         motion.linearVelocity  = .zero
@@ -48,7 +42,6 @@ class MotionController: ObservableObject {
         player.components[PhysicsMotionComponent.self] = motion
     }
 
-    /// Re-enables movement (call on game restart).
     func unfreeze() {
         frozen = false
     }
@@ -60,7 +53,7 @@ class MotionController: ObservableObject {
         cameraYaw -= screenDX * lookSensitivity
     }
 
-    // MARK: - Movement (left thumb / joystick)
+    // MARK: - Movement (left thumb/joystick)
 
     func applyJoystickInput(dx: Float, dz: Float) {
         guard !frozen else { return }
@@ -68,7 +61,7 @@ class MotionController: ObservableObject {
         joystickDZ = dz
     }
 
-    /// Call every frame from tickCamera (SceneEvents.Update).
+    /// nerjemahin input joystick ke world-space — supaya "maju" di joystick selalu berarti maju ke arah kamera lagi ngelihat, bukan selalu ke arah yang sama di dunia
     func tickMovement() {
         guard !frozen else { return }
         guard let player = player else { return }

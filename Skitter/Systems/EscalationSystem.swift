@@ -1,12 +1,6 @@
 import RealityKit
 import Foundation
 
-/// Reacts to each new bait trigger — spawns new roaches and upgrades existing ones.
-///
-/// Bait 1: spawn 3 Giants + upgrade all active Chasers → Giant
-/// Bait 2: spawn 2 Flying + 2 Giants + upgrade all active Giants → Flying
-/// Bait 3: spawn 3 Flying + 2 Giants, speed bump all
-/// Bait 4+: spawn swarm of Chasers, speed bump all
 class EscalationSystem {
     private weak var gameState:  GameState?
     private weak var roachParent: Entity?

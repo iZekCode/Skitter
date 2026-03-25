@@ -1,13 +1,9 @@
 import RealityKit
 import Combine
 
-/// Increases player linear damping while inside an oil puddle trigger,
-/// making movement feel sluggish and resistant. Restores normal damping on exit.
 class PuddleSystem {
 
-    // Must match PlayerEntity.physics.linearDamping
     private static let normalDamping: Float = 4.0
-    // High damping = fighting through thick oil
     private static let puddleDamping: Float = 30.0
 
     private var beganSub: (any Cancellable)?

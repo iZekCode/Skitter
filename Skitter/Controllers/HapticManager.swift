@@ -1,7 +1,6 @@
 import CoreHaptics
 import UIKit
 
-/// Manages CoreHaptics engine and provides predefined haptic patterns
 class HapticManager {
     private var engine: CHHapticEngine?
     private let supportsHaptics: Bool
@@ -13,14 +12,10 @@ class HapticManager {
 
     // MARK: - Tunable proximity constants
 
-    /// Distance (meters) at which proximity haptic starts
     private static let proximityStartDist: Float = 12.0
-    /// Distance (meters) at which haptic reaches full intensity
-    private static let proximityMaxDist:   Float = 2.0
-    /// Minimum haptic intensity when roach is at proximityStartDist
+    private static let proximityMaxDist:   Float = 5.0
     private static let proximityMinIntensity: Float = 0.05
-    /// Maximum haptic intensity when roach is at proximityMaxDist
-    private static let proximityMaxIntensity: Float = 0.8
+    private static let proximityMaxIntensity: Float = 0.9
 
     // MARK: - Init
 
@@ -161,8 +156,6 @@ class HapticManager {
 
     // MARK: - Roach proximity (continuous, modulated every frame)
 
-    /// Call every frame with the distance to the nearest roach.
-    /// Starts/stops the continuous haptic automatically.
     func updateRoachProximity(closestDistance: Float) {
         guard supportsHaptics, let engine = engine else { return }
 
@@ -175,10 +168,9 @@ class HapticManager {
             return
         }
 
-        // Normalise 0→1 (0 = start dist, 1 = max dist)
         let t         = 1.0 - min(max((closestDistance - end) / (start - end), 0), 1)
         let intensity = Self.proximityMinIntensity + t * (Self.proximityMaxIntensity - Self.proximityMinIntensity)
-        let sharpness = Float(0.3 + t * 0.3)   // 0.3 (far) → 0.6 (close)
+        let sharpness = Float(0.3 + t * 0.3)
 
         if !proximityRunning {
             // Start the continuous player
@@ -190,7 +182,7 @@ class HapticManager {
                         CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness)
                     ],
                     relativeTime: 0,
-                    duration: 100   // long duration — we stop it manually
+                    duration: 100
                 )
                 let pattern = try CHHapticPattern(events: [event], parameters: [])
                 proximityPlayer  = try engine.makeAdvancedPlayer(with: pattern)
@@ -207,7 +199,6 @@ class HapticManager {
                     CHHapticDynamicParameter(parameterID: .hapticSharpnessControl, value: sharpness, relativeTime: 0)
                 ], atTime: CHHapticTimeImmediate)
             } catch {
-                // Non-fatal — skip this frame
             }
         }
     }

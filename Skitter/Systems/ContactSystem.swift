@@ -2,11 +2,6 @@ import RealityKit
 import Combine
 import Foundation
 
-/// Handles all collision events between the player and the world.
-///
-/// Phase 2+ rules — no crush mechanic:
-/// - Player touches a roach → instant game over
-/// - Player touches obstacle / wall → haptic bump, no penalty
 class ContactSystem {
     private var collisionSubscription: (any Cancellable)?
     private weak var gameState:     GameState?
@@ -40,7 +35,7 @@ class ContactSystem {
 
         let other = a.name == "player" ? b : a
 
-        // ── Roach contact → instant death ────────────────────────────────────
+        // Roach contact → instant death
         if other.components[RoachComponent.self] != nil {
             DispatchQueue.main.async { [weak self] in
                 gameState.triggerGameOver()
@@ -51,7 +46,7 @@ class ContactSystem {
             return
         }
 
-        // ── Obstacle / wall contact → bump haptic only ────────────────────────
+        // Obstacle/wall contact → bump haptic only
         if other.name.starts(with: "obstacle") || other.name.starts(with: "wall") {
             hapticManager?.playObstacleHit()
         }
