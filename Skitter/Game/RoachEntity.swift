@@ -1,38 +1,32 @@
 import RealityKit
 import UIKit
 
-/// Factory for creating cockroach entities
 enum RoachEntity {
 
     // MARK: - Shared constants
 
     static let floorOffset: Float = 0.1
 
-    // MARK: - Chaser (roach_1)
+    // MARK: - Chaser
 
     static let chaserScale:             Float = 4.0
     static let chaserCapsuleRadius:     Float = 0.35 * chaserScale
     static let chaserCapsuleHeight:     Float = 0.60 * chaserScale
-    /// Yaw offset in radians to correct roach_1 model facing direction.
-    /// 0 = faces +Z, .pi/2 = faces +X, .pi = faces -Z, -.pi/2 = faces -X
     static let chaserFacingYaw:         Float = .pi / 2
 
-    // MARK: - Giant (roach_2)
+    // MARK: - Giant
 
     static let giantScale:              Float = 8.0
     static let giantCapsuleRadius:      Float = 0.4 * giantScale
     static let giantCapsuleHeight:      Float = 0.60 * giantScale
-    /// Yaw offset in radians to correct roach_2 model facing direction.
     static let giantFacingYaw:          Float = 0.0
 
-    // MARK: - Flying (roach_3)
+    // MARK: - Flying
 
     static let flyingScale:             Float = 4.0
     static let flyingCapsuleRadius:     Float = 0.35 * flyingScale
     static let flyingCapsuleHeight:     Float = 0.60 * flyingScale
-    /// Yaw offset in radians to correct roach_3 model facing direction.
     static let flyingFacingYaw:         Float = .pi / 2
-    /// How high flying roaches hover above the floor (meters)
     static let flyingHoverHeight:       Float = 2.5
 
     // MARK: - Template cache
@@ -41,7 +35,6 @@ enum RoachEntity {
     private static var giantTemplate:   Entity? = nil
     private static var flyingTemplate:  Entity? = nil
 
-    /// Preload all roach USDZ models. Call once before any spawning.
     static func preload() {
         if chaserTemplate == nil {
             chaserTemplate = loadTemplate(named: "roach_1", scale: chaserScale, facingYaw: chaserFacingYaw)

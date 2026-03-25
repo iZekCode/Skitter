@@ -14,14 +14,11 @@ class GameState {
     var elapsedTime: TimeInterval = 0
     var isGameOver: Bool = false
     var ballSpeed: Float = 0
-    
     var playerPosition: SIMD3<Float> = .zero
-    
     var baitTriggeredCount: Int = 0
     var bagsRemaining: Int = 5
     var isWin: Bool = false
 
-    // Track the RealityKit scene for system access
     weak var scene: RealityKit.Scene?
 
     private var gameTimer: Timer?

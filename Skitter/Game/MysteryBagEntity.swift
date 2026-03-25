@@ -4,13 +4,12 @@ import UIKit
 // MARK: - Bag Type
 
 enum BagType {
-    case baygon   // WIN — the one pesticide can hidden among the bags
-    case bait     // LOSE escalation — rotten food pile inside
+    case baygon
+    case bait
 }
 
 // MARK: - Component
 
-/// ECS component attached to every mystery bag entity.
 struct MysteryBagComponent: Component {
     let bagType: BagType
     var hasTriggered: Bool = false
@@ -25,9 +24,6 @@ enum MysteryBagEntity {
     static let width:  Float = 1.2
     static let height: Float = 1.0
     static let depth:  Float = 0.9
-
-    /// Trigger sphere — slightly larger than the mesh so the player
-    /// "finds" the bag just before visually walking into it.
     static let triggerRadius: Float = 1.4
 
     // MARK: - Spawn rules
@@ -37,11 +33,10 @@ enum MysteryBagEntity {
 
     // MARK: - Model cache
 
-    private static var bagTemplate:    Entity? = nil   // black_plastic.usdz
-    private static var baygonTemplate: Entity? = nil   // byegone.usdz    (win reveal)
-    private static var baitTemplate:   Entity? = nil   // food_pile.usdz  (bait reveal)
+    private static var bagTemplate:    Entity? = nil
+    private static var baygonTemplate: Entity? = nil
+    private static var baitTemplate:   Entity? = nil
 
-    /// Load all three models once. Call this before the first `spawnAll()`.
     static func preload() {
         if bagTemplate == nil {
             if let e = try? Entity.load(named: "black_plastic") {
@@ -71,18 +66,17 @@ enum MysteryBagEntity {
 
     // MARK: - Factory
 
-    /// Creates one mystery bag entity at `position`.
     static func create(at position: SIMD3<Float>, type bagType: BagType) -> Entity {
         let bag  = Entity()
         bag.name = "mysteryBag"
 
-        // ── Visual child ─────────────────────────────────────────────────────
+        // Visual child
         if let template = bagTemplate {
             let visual = template.clone(recursive: true)
             fitModel(visual, width: width, height: height, depth: depth)
             bag.addChild(visual)
         } else {
-            // Fallback: procedural dark plastic box
+            // Fallback
             let mesh = MeshResource.generateBox(
                 width: width, height: height, depth: depth, cornerRadius: 0.25
             )
@@ -91,15 +85,13 @@ enum MysteryBagEntity {
             mat.roughness = .init(floatLiteral: 0.35)
             mat.metallic  = .init(floatLiteral: 0.0)
             let fallback  = ModelEntity(mesh: mesh, materials: [mat])
-            // Centre the box so its bottom is at y = 0 in bag space
             fallback.position.y = height / 2.0
             bag.addChild(fallback)
         }
 
-        // Sit flush on the floor
         bag.position = SIMD3<Float>(position.x, 0, position.z)
 
-        // ── Collision — trigger only ─────────────────────────────────────────
+        // Collision — trigger only
         bag.components.set(CollisionComponent(
             shapes: [.generateSphere(radius: triggerRadius)],
             mode: .trigger,
@@ -108,17 +100,15 @@ enum MysteryBagEntity {
                 mask:  [CollisionGroups.ball]
             )
         ))
-
-        // ── ECS component ────────────────────────────────────────────────────
+        
+        // ECS component
         bag.components.set(MysteryBagComponent(bagType: bagType))
 
         return bag
     }
 
     // MARK: - Reveal entity
-
-    /// Clones the reveal model (byegone or food_pile) sized to fit the bag footprint.
-    /// Returns nil if the model wasn't preloaded.
+    
     static func createRevealEntity(for bagType: BagType) -> Entity? {
         let template = bagType == .baygon ? baygonTemplate : baitTemplate
         guard let t = template else { return nil }
@@ -130,7 +120,7 @@ enum MysteryBagEntity {
 
     // MARK: - Batch spawn
 
-    /// Spawns 5 bags into `parent` — 1 baygon, 4 bait, randomly placed.
+    /// Spawns 5 bags: 1 baygon, 4 bait, randomly placed
     static func spawnAll(in parent: Entity) {
         let positions = generatePositions(count: 5)
         let types: [BagType] = [.baygon, .bait, .bait, .bait, .bait].shuffled()
@@ -182,8 +172,6 @@ enum MysteryBagEntity {
 
     // MARK: - Shared model-fitting helper
 
-    /// Scale entity so its height ≈ targetHeight, then shift so its bottom
-    /// sits at y = 0 in the entity's parent space.
     private static func fitModel(
         _ entity: Entity,
         width:  Float,
@@ -196,7 +184,6 @@ enum MysteryBagEntity {
         let scale: Float = rawHeight > 0.001 ? height / rawHeight : 1.0
         entity.scale = SIMD3<Float>(repeating: scale)
 
-        // Shift so bottom sits at y = 0 in parent (bag container) space
         let scaledMinY  = rawBounds.min.y * scale
         entity.position = SIMD3<Float>(0, -scaledMinY, 0)
     }

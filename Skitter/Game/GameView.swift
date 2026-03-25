@@ -5,27 +5,23 @@ import simd
 
 struct GameView: View {
     @Environment(AppState.self) private var appState
-    @State private var gameState        = GameState()
-    @State private var motionController = MotionController()
-    @State private var hapticManager    = HapticManager()
-    @State private var audioManager     = AudioManager()
-    @State private var contactSystem:     ContactSystem?
-    @State private var bagTriggerSystem:  BagTriggerSystem?
-    @State private var escalationSystem:  EscalationSystem?
-    @State private var fogSphere:         FogSphere?
-    @State private var puddleSystem: PuddleSystem?
-    @State private var playerEntity:      ModelEntity?
-    @State private var roachSpawnTimer:   Timer?
-    @State private var showCountdown      = true
-    @State private var countdownValue     = 3
+    @State private var gameState                = GameState()
+    @State private var motionController         = MotionController()
+    @State private var hapticManager            = HapticManager()
+    @State private var audioManager             = AudioManager()
+    @State private var contactSystem:           ContactSystem?
+    @State private var bagTriggerSystem:        BagTriggerSystem?
+    @State private var escalationSystem:        EscalationSystem?
+    @State private var fogSphere:               FogSphere?
+    @State private var puddleSystem:            PuddleSystem?
+    @State private var playerEntity:            ModelEntity?
+    @State private var roachSpawnTimer:         Timer?
+    @State private var showCountdown            = true
+    @State private var countdownValue           = 3
     @State private var cameraEntity:            PerspectiveCamera?
     @State private var sceneUpdateSubscription: (any Cancellable)?
-    @State private var assetsLoading = true
-
-    /// Mirrors MotionController.cameraYaw into SwiftUI state so the minimap
-    /// radar cone re-renders every time the player looks around.
-    /// (MotionController.cameraYaw is not @Published, so we copy it in tickCamera.)
-    @State private var hudCameraYaw: Float = .pi
+    @State private var assetsLoading            = true
+    @State private var hudCameraYaw: Float      = .pi
 
     var body: some View {
         ZStack {
@@ -34,7 +30,7 @@ struct GameView: View {
                 loadingOverlay
             } else {
                 realityViewScene
-                // Vignette — sits above 3D scene, below all UI
+                
                 VignetteView(baitCount: gameState.baitTriggeredCount)
 
                 if !showCountdown && !gameState.isGameOver {
@@ -51,12 +47,12 @@ struct GameView: View {
                         cameraYaw:  hudCameraYaw
                     )
                 }
-                if showCountdown  { countdownOverlay }
+                if showCountdown { countdownOverlay }
                 if gameState.isGameOver { gameOverOverlay }
             }
         }
         .ignoresSafeArea()
-        .onAppear   { preloadThenStart() }
+        .onAppear { preloadThenStart() }
         .onDisappear { cleanup() }
     }
 
@@ -193,8 +189,10 @@ struct GameView: View {
             physicsRoot.components.set(sim)
             content.add(physicsRoot)
 
+            // Arena
             physicsRoot.addChild(ArenaBuilder.buildArena())
-
+            
+            // Player
             let player = PlayerEntity.create()
             physicsRoot.addChild(player)
             self.playerEntity = player
@@ -205,6 +203,7 @@ struct GameView: View {
             physicsRoot.addChild(fog.entity)
             self.fogSphere = fog
 
+            // Camera
             let camera = PerspectiveCamera()
             camera.name = "gameCamera"
             camera.camera.fieldOfViewInDegrees = 75
@@ -265,15 +264,12 @@ struct GameView: View {
             gameState.playerPosition = basePos
         }
 
-        // Push yaw into SwiftUI state so the minimap radar cone re-renders.
-        // We throttle to ~20 fps for the HUD (every ~3 frames at 60 fps) to
-        // avoid forcing a full SwiftUI layout pass every single frame.
         let newYaw = motionController.cameraYaw
         if abs(newYaw - hudCameraYaw) > 0.04 {
             hudCameraYaw = newYaw
         }
 
-        // Spatial audio: update listener + roach positions every frame
+        // Send roach position for proximity audio update
         guard let root = player.parent else { return }
         let roachEntities = root.children.filter { $0.components[RoachComponent.self] != nil }
         audioManager.updatePositions(
@@ -282,13 +278,12 @@ struct GameView: View {
             roachEntities:    Array(roachEntities)
         )
 
-        // Proximity haptic — closest roach distance
+        // Send closest roach position for proximity haptic update
         let closestDist = roachEntities.map {
             length($0.position(relativeTo: nil) - basePos)
         }.min() ?? Float.infinity
         hapticManager.updateRoachProximity(closestDistance: closestDist)
 
-        // Fog sphere follows player every frame
         fogSphere?.follow(player: player)
     }
 
@@ -306,6 +301,7 @@ struct GameView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             guard let scene = playerEntity?.scene else { return }
             subscribeToSceneUpdates(scene: scene)
+            
             contactSystem = ContactSystem(
                 scene: scene, gameState: gameState,
                 hapticManager: hapticManager, audioManager: audioManager,
@@ -314,14 +310,19 @@ struct GameView: View {
                     freezeAllRoaches()    
                 }
             )
+            
             puddleSystem = PuddleSystem(scene: scene)
+            
             if let arenaRoot = playerEntity?.parent {
                 MysteryBagEntity.spawnAll(in: arenaRoot)
+                
                 escalationSystem = EscalationSystem(gameState: gameState, roachParent: arenaRoot, audioManager: audioManager)
+                
                 bagTriggerSystem = BagTriggerSystem(
                     scene: scene, gameState: gameState,
                     hapticManager: hapticManager, audioManager: audioManager,
                     bagParent: arenaRoot)
+                
                 bagTriggerSystem?.freezePlayer = {
                     motionController.freeze()
                     freezeAllRoaches()
@@ -355,7 +356,6 @@ struct GameView: View {
         RoachAISystem.isGameOver = true
         audioManager.stopAllRoachAudio() 
 
-        // Zero velocity on every roach so they stop mid-step
         guard let root = playerEntity?.parent else { return }
         for child in root.children {
             guard child.components[RoachComponent.self] != nil else { continue }
@@ -381,7 +381,7 @@ struct GameView: View {
         escalationSystem?.cancel();       escalationSystem = nil
         roachSpawnTimer?.invalidate();    roachSpawnTimer = nil
         fogSphere = nil
-        puddleSystem?.cancel(); puddleSystem = nil
+        puddleSystem?.cancel();           puddleSystem = nil
         audioManager.stop()
         gameState.reset()
     }

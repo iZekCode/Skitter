@@ -76,9 +76,8 @@ enum ArenaBuilder {
 
     // MARK: - Preload
 
-    /// Must be called on the main actor before buildArena().
     static func preload() {
-        // ── Floor texture ────────────────────────────────────────────────────
+        // Floor texture
         if floorTexture == nil {
             let uiImage: UIImage? = {
                 if let url = Bundle.main.url(forResource: "floor", withExtension: "jpg") {
@@ -98,7 +97,7 @@ enum ArenaBuilder {
             }
         }
 
-        // ── Obstacle models ──────────────────────────────────────────────────
+        // Obstacle models
         let names = Set(slotModels.map(\.name))
         for name in names where modelCache[name] == nil {
             if let e = try? Entity.load(named: name) {
@@ -218,10 +217,6 @@ enum ArenaBuilder {
         node.name = slot.name == "oil_puddle" ? "puddle_\(index)" : "obstacle_\(index)"
         node.position = config.position
 
-        // Build the collision shape — derived from actual post-fit visual bounds
-        // so the box always matches the mesh regardless of the model's raw proportions.
-        // Root cause: fitModel scales uniformly by height only, so a wide fence mesh
-        // ends up much larger in X/Z than config.size, causing invisible passthrough gaps.
         let collisionShape: ShapeResource
         if let tmpl = modelCache[slot.name] {
             let v = tmpl.clone(recursive: true)
@@ -230,7 +225,7 @@ enum ArenaBuilder {
 
             let b = v.visualBounds(relativeTo: node)
             let ext = b.extents.x > 0.01 ? b.extents : config.size
-            // offsetBy centres the box at the visual centroid in node space
+            
             collisionShape = ShapeResource
                 .generateBox(width: ext.x, height: ext.y, depth: ext.z)
                 .offsetBy(rotation: simd_quatf(ix: 0, iy: 0, iz: 0, r: 1),
@@ -265,7 +260,6 @@ enum ArenaBuilder {
         let scale: Float = rawHeight > 0.001 ? s.y / rawHeight : 1.0
         e.scale    = SIMD3<Float>(repeating: scale)
 
-        // Shift so bottom sits at y = 0 in parent (bag container) space
         let scaledMinY  = b.min.y * scale
         e.position = SIMD3<Float>(0, -scaledMinY - s.y / 2.0, 0)
     }

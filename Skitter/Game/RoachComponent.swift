@@ -14,7 +14,6 @@ struct RoachComponent: Component {
 
     // MARK: - Factory presets
 
-    /// Normal chaser — spawns from the start
     static func chaser() -> RoachComponent {
         RoachComponent(
             roachType: .chaser,
@@ -23,7 +22,6 @@ struct RoachComponent: Component {
         )
     }
 
-    /// Giant — slow, large, spawns on bait 1
     static func giant() -> RoachComponent {
         RoachComponent(
             roachType: .giant,
@@ -32,7 +30,6 @@ struct RoachComponent: Component {
         )
     }
 
-    /// Flying — fast, hovers, spawns on bait 2
     static func flying() -> RoachComponent {
         RoachComponent(
             roachType: .flying,
