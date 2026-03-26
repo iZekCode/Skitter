@@ -15,6 +15,7 @@ class GameState {
     var isGameOver: Bool = false
     var ballSpeed: Float = 0
     var playerPosition: SIMD3<Float> = .zero
+    var roachPositions: [SIMD3<Float>] = []
     var baitTriggeredCount: Int = 0
     var bagsRemaining: Int = 5
     var isWin: Bool = false
@@ -71,5 +72,6 @@ class GameState {
         baitTriggeredCount = 0
         bagsRemaining = 5
         isWin = false
+        roachPositions = []     
     }
 }

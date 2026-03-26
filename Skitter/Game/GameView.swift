@@ -273,6 +273,8 @@ struct GameView: View {
         // Send roach position for proximity audio update
         guard let root = player.parent else { return }
         let roachEntities = root.children.filter { $0.components[RoachComponent.self] != nil }
+        gameState.roachPositions = roachEntities.map { $0.position(relativeTo: nil) }
+        
         audioManager.updatePositions(
             listenerPosition: eyePos,
             listenerYaw:      motionController.cameraYaw,

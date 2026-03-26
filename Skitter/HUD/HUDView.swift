@@ -15,6 +15,7 @@ struct HUDView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         MiniMapView(
                             playerPosition: playerPosition,
+                            roachPositions: gameState.roachPositions, 
                             cameraYaw:      cameraYaw
                         )
                         BagsRemainingView(bagsRemaining: gameState.bagsRemaining)

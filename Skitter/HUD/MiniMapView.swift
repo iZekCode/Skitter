@@ -3,6 +3,7 @@ import RealityKit
 
 struct MiniMapView: View {
     let playerPosition: SIMD3<Float>
+    let roachPositions: [SIMD3<Float>]
     let cameraYaw: Float
 
     // MARK: - Geometry
@@ -43,6 +44,17 @@ struct MiniMapView: View {
                     center: center
                 )
                 context.fill(Path(rect), with: .color(.white.opacity(0.18)))
+            }
+            
+            // Roach dots
+            for roachPos in roachPositions {
+                let pt = worldToMap(x: roachPos.x, z: roachPos.z, center: center)
+                let r: CGFloat = 2.5
+                let rect = CGRect(x: pt.x - r, y: pt.y - r, width: r * 2, height: r * 2)
+                context.fill(
+                    Path(ellipseIn: rect),
+                    with: .color(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.85))
+                )
             }
 
             // Player dot
