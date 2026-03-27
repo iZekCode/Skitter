@@ -68,8 +68,10 @@ class EscalationSystem {
     private enum SpawnType { case chaser, giant, flying }
 
     private func spawnWave(parent: Entity, count: Int, type: SpawnType) {
+        let playerPos = gameState?.playerPosition
+        
         for _ in 0..<count {
-            let pos   = RoachEntity.randomEdgePosition()
+            let pos   = RoachEntity.randomEdgePosition(avoidingPosition: playerPos)
             let roach: ModelEntity
             switch type {
             case .chaser:  roach = RoachEntity.createChaser(at: pos)

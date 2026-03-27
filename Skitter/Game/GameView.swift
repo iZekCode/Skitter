@@ -338,8 +338,10 @@ struct GameView: View {
 
     private func spawnInitialRoaches() {
         guard let root = playerEntity?.parent else { return }
+        let playerPos = playerEntity?.position(relativeTo: nil)
         for _ in 0..<2 {
-            let roach = RoachEntity.createChaser(at: RoachEntity.randomEdgePosition())
+            let pos = RoachEntity.randomEdgePosition(avoidingPosition: playerPos)
+            let roach = RoachEntity.createChaser(at: pos)
             root.addChild(roach)
             audioManager.addRoach(roach)
         }
@@ -349,7 +351,9 @@ struct GameView: View {
         roachSpawnTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
             guard !gameState.isGameOver else { roachSpawnTimer?.invalidate(); return }
             guard let root = playerEntity?.parent else { return }
-            let roach = RoachEntity.createChaser(at: RoachEntity.randomEdgePosition())
+            let playerPos = playerEntity?.position(relativeTo: nil)
+            let pos = RoachEntity.randomEdgePosition(avoidingPosition: playerPos)
+            let roach = RoachEntity.createChaser(at: pos)
             root.addChild(roach)
             audioManager.addRoach(roach)
         }

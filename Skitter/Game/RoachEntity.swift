@@ -6,6 +6,7 @@ enum RoachEntity {
     // MARK: - Shared constants
 
     static let floorOffset: Float = 0.1
+    static let minSpawnDistance: Float = 12.0
 
     // MARK: - Chaser
 
@@ -155,13 +156,27 @@ enum RoachEntity {
 
     // MARK: - Spawn positions
 
-    static func randomEdgePosition(arenaSize: Float = ArenaBuilder.arenaSize) -> SIMD3<Float> {
+    static func randomEdgePosition(
+        avoidingPosition playerPosition: SIMD3<Float>? = nil,
+        arenaSize: Float = ArenaBuilder.arenaSize
+    ) -> SIMD3<Float> {
         let half = arenaSize / 2.0 - 2.0
-        switch Int.random(in: 0...3) {
-        case 0:  return SIMD3<Float>(Float.random(in: -half...half), 0, -half)
-        case 1:  return SIMD3<Float>(Float.random(in: -half...half), 0,  half)
-        case 2:  return SIMD3<Float>(-half, 0, Float.random(in: -half...half))
-        default: return SIMD3<Float>( half, 0, Float.random(in: -half...half))
+        var candidate = SIMD3<Float>.zero
+ 
+        for _ in 0..<20 {
+            switch Int.random(in: 0...3) {
+            case 0:  candidate = SIMD3<Float>(Float.random(in: -half...half), 0, -half)
+            case 1:  candidate = SIMD3<Float>(Float.random(in: -half...half), 0,  half)
+            case 2:  candidate = SIMD3<Float>(-half, 0, Float.random(in: -half...half))
+            default: candidate = SIMD3<Float>( half, 0, Float.random(in: -half...half))
+            }
+ 
+            guard let p = playerPosition else { return candidate }
+            let dx = candidate.x - p.x
+            let dz = candidate.z - p.z
+            if sqrt(dx * dx + dz * dz) >= minSpawnDistance { return candidate }
         }
+ 
+        return candidate
     }
 }
