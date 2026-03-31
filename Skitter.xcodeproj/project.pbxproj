@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2702E1C62F741DD70033E32A /* Asset.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2702E1C52F741DD70033E32A /* Asset.xcassets */; };
 		2715761A2F6EC2A100418487 /* PuddleSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271576192F6EC29E00418487 /* PuddleSystem.swift */; };
+		2721A8C62F7BF17E006F5101 /* DifficultySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2721A8C52F7BF16F006F5101 /* DifficultySettings.swift */; };
 		273F5D4C2F6CDD8C004F5D81 /* DualThumbControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */; };
 		2748FA472F6E36CB002A2B97 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748FA462F6E36C7002A2B97 /* AudioManager.swift */; };
 		2748FA492F6E70BC002A2B97 /* VignetteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748FA482F6E70B8002A2B97 /* VignetteView.swift */; };
@@ -61,6 +62,7 @@
 /* Begin PBXFileReference section */
 		2702E1C52F741DD70033E32A /* Asset.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Asset.xcassets; sourceTree = "<group>"; };
 		271576192F6EC29E00418487 /* PuddleSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PuddleSystem.swift; sourceTree = "<group>"; };
+		2721A8C52F7BF16F006F5101 /* DifficultySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DifficultySettings.swift; sourceTree = "<group>"; };
 		273F5D4B2F6CDD8B004F5D81 /* DualThumbControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualThumbControlView.swift; sourceTree = "<group>"; };
 		2748FA462F6E36C7002A2B97 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		2748FA482F6E70B8002A2B97 /* VignetteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VignetteView.swift; sourceTree = "<group>"; };
@@ -207,6 +209,7 @@
 			children = (
 				AB000003 /* GameState.swift */,
 				AB000004 /* GameView.swift */,
+				2721A8C52F7BF16F006F5101 /* DifficultySettings.swift */,
 				2748FA522F6E9466002A2B97 /* FogSphere.swift */,
 				AB000005 /* ArenaBuilder.swift */,
 				27D269FD2F6BF2F100723120 /* PlayerEntity.swift */,
@@ -385,6 +388,7 @@
 				AA000014 /* MainMenuView.swift in Sources */,
 				27D26A062F6C027600723120 /* EscalationSystem.swift in Sources */,
 				273F5D4C2F6CDD8C004F5D81 /* DualThumbControlView.swift in Sources */,
+				2721A8C62F7BF17E006F5101 /* DifficultySettings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

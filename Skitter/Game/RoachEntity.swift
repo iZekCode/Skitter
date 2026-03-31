@@ -61,42 +61,42 @@ enum RoachEntity {
 
     // MARK: - Chaser
 
-    static func createChaser(at position: SIMD3<Float>) -> ModelEntity {
+    static func createChaser(at position: SIMD3<Float>, speedMultiplier: Float = 1.0) -> ModelEntity {
         let container = makeContainer(
             name:          "roach_chaser",
             position:      SIMD3<Float>(position.x, floorOffset, position.z),
             template:      chaserTemplate,
             capsuleRadius: chaserCapsuleRadius,
             capsuleHeight: chaserCapsuleHeight,
-            component:     .chaser()
+            component:     .chaser(speedMultiplier: speedMultiplier)
         )
         return container
     }
 
     // MARK: - Giant
 
-    static func createGiant(at position: SIMD3<Float>) -> ModelEntity {
+    static func createGiant(at position: SIMD3<Float>, speedMultiplier: Float = 1.0) -> ModelEntity {
         let container = makeContainer(
             name:          "roach_giant",
             position:      SIMD3<Float>(position.x, floorOffset, position.z),
             template:      giantTemplate,
             capsuleRadius: giantCapsuleRadius,
             capsuleHeight: giantCapsuleHeight,
-            component:     .giant()
+            component:     .giant(speedMultiplier: speedMultiplier)
         )
         return container
     }
 
     // MARK: - Flying
 
-    static func createFlying(at position: SIMD3<Float>) -> ModelEntity {
+    static func createFlying(at position: SIMD3<Float>, speedMultiplier: Float = 1.0) -> ModelEntity {
         let container = makeContainer(
             name:          "roach_flying",
             position:      SIMD3<Float>(position.x, flyingHoverHeight, position.z),
             template:      flyingTemplate,
             capsuleRadius: flyingCapsuleRadius,
             capsuleHeight: flyingCapsuleHeight,
-            component:     .flying()
+            component:     .flying(speedMultiplier: speedMultiplier)
         )
         return container
     }

@@ -6,15 +6,15 @@ class EscalationSystem {
     private weak var roachParent: Entity?
     private weak var audioManager: AudioManager?
 
+    private let difficultySettings: DifficultySettings
     private var lastHandledBaitCount: Int = 0
     private var pollTimer: Timer?
 
-    private static let speedBumpPerBait: Float = 0.15
-
-    init(gameState: GameState, roachParent: Entity, audioManager: AudioManager? = nil) {
-        self.gameState    = gameState
-        self.roachParent  = roachParent
-        self.audioManager = audioManager
+    init(gameState: GameState, roachParent: Entity, audioManager: AudioManager? = nil, difficulty: DifficultySettings = .newbie) {
+        self.gameState          = gameState
+        self.roachParent        = roachParent
+        self.audioManager       = audioManager
+        self.difficultySettings = difficulty
 
         pollTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
             self?.checkEscalation()
@@ -39,28 +39,13 @@ class EscalationSystem {
     private func handleEscalationTick(baitCount: Int) {
         guard let parent = roachParent else { return }
 
-        switch baitCount {
+        let wave = difficultySettings.escalationWaves[baitCount] ?? difficultySettings.defaultWave
 
-        case 1:
-            spawnWave(parent: parent, count: 3, type: .giant)
-            print("[EscalationSystem] Bait 1: +3 Giants")
-         
-        case 2:
-            spawnWave(parent: parent, count: 2, type: .giant)
-            spawnWave(parent: parent, count: 3, type: .flying)
-            print("[EscalationSystem] Bait 2: +2 Giants +3 Flying")
-         
-        case 3:
-            spawnWave(parent: parent, count: 1, type: .giant)
-            spawnWave(parent: parent, count: 4, type: .flying)
-            bumpAllSpeeds(in: parent)
-            print("[EscalationSystem] Bait 3: +1 Giant +4 Flying, speed bump")
-         
-        default:
-            spawnWave(parent: parent, count: 5, type: .flying)
-            bumpAllSpeeds(in: parent)
-            print("[EscalationSystem] Bait \(baitCount): +5 Flying, speed bump")
-        }
+        if wave.giants > 0  { spawnWave(parent: parent, count: wave.giants,  type: .giant) }
+        if wave.flying > 0  { spawnWave(parent: parent, count: wave.flying,  type: .flying) }
+        if wave.applySpeedBump { bumpAllSpeeds(in: parent) }
+
+        print("[EscalationSystem] Bait \(baitCount): +\(wave.giants) Giants +\(wave.flying) Flying speedBump=\(wave.applySpeedBump)")
     }
 
     // MARK: - Spawn wave
@@ -69,14 +54,15 @@ class EscalationSystem {
 
     private func spawnWave(parent: Entity, count: Int, type: SpawnType) {
         let playerPos = gameState?.playerPosition
+        let speedMult = difficultySettings.roachSpeedMultiplier
         
         for _ in 0..<count {
             let pos   = RoachEntity.randomEdgePosition(avoidingPosition: playerPos)
             let roach: ModelEntity
             switch type {
-            case .chaser:  roach = RoachEntity.createChaser(at: pos)
-            case .giant:   roach = RoachEntity.createGiant(at: pos)
-            case .flying:  roach = RoachEntity.createFlying(at: pos)
+            case .chaser:  roach = RoachEntity.createChaser(at: pos, speedMultiplier: speedMult)
+            case .giant:   roach = RoachEntity.createGiant(at: pos,  speedMultiplier: speedMult)
+            case .flying:  roach = RoachEntity.createFlying(at: pos,  speedMultiplier: speedMult)
             }
             parent.addChild(roach)
             audioManager?.addRoach(roach)
@@ -88,7 +74,7 @@ class EscalationSystem {
     private func bumpAllSpeeds(in parent: Entity) {
         for child in parent.children {
             guard var comp = child.components[RoachComponent.self] else { continue }
-            comp.speed *= (1.0 + Self.speedBumpPerBait)
+            comp.speed *= (1.0 + difficultySettings.speedBumpPerBait)
             child.components[RoachComponent.self] = comp
         }
     }

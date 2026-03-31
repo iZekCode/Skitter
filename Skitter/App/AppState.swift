@@ -11,18 +11,26 @@ class AppState {
     var lastSurvivedTime: TimeInterval = 0
     var lastBagsOpened: Int = 0
     var lastIsWin: Bool = false
+    var selectedDifficulty: DifficultyLevel = .newbie
 
-    var bestWinTime: TimeInterval {
-        get { UserDefaults.standard.double(forKey: "bestWinTime") }
-        set { UserDefaults.standard.set(newValue, forKey: "bestWinTime") }
+    func bestWinTime(for level: DifficultyLevel) -> TimeInterval {
+        UserDefaults.standard.double(forKey: "bestWinTime_\(level.rawValue.lowercased())")
     }
 
-    var bestBagsOpened: Int {
-        get { UserDefaults.standard.integer(forKey: "bestBagsOpened") }
-        set { UserDefaults.standard.set(newValue, forKey: "bestBagsOpened") }
+    func bestBagsOpened(for level: DifficultyLevel) -> Int {
+        UserDefaults.standard.integer(forKey: "bestBagsOpened_\(level.rawValue.lowercased())")
     }
 
-    func startGame() {
+    private func setBestWinTime(_ value: TimeInterval, for level: DifficultyLevel) {
+        UserDefaults.standard.set(value, forKey: "bestWinTime_\(level.rawValue.lowercased())")
+    }
+
+    private func setBestBagsOpened(_ value: Int, for level: DifficultyLevel) {
+        UserDefaults.standard.set(value, forKey: "bestBagsOpened_\(level.rawValue.lowercased())")
+    }
+
+    func startGame(difficulty: DifficultyLevel = .newbie) {
+        selectedDifficulty = difficulty
         currentScreen = .playing
     }
 
@@ -32,9 +40,10 @@ class AppState {
         lastIsWin        = isWin
 
         if isWin {
-            if bestWinTime == 0 || survivedTime < bestWinTime {
-                bestWinTime  = survivedTime
-                bestBagsOpened = bagsOpened
+            let currentBest = bestWinTime(for: selectedDifficulty)
+            if currentBest == 0 || survivedTime < currentBest {
+                setBestWinTime(survivedTime, for: selectedDifficulty)
+                setBestBagsOpened(bagsOpened, for: selectedDifficulty)
             }
         }
         currentScreen = .menu

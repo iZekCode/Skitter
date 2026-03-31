@@ -14,26 +14,26 @@ struct RoachComponent: Component {
 
     // MARK: - Factory presets
 
-    static func chaser() -> RoachComponent {
+    static func chaser(speedMultiplier: Float = 1.0) -> RoachComponent {
         RoachComponent(
             roachType: .chaser,
-            speed: 4.0,
+            speed: 4.0 * speedMultiplier,
             crushThreshold: 6.0
         )
     }
 
-    static func giant() -> RoachComponent {
+    static func giant(speedMultiplier: Float = 1.0) -> RoachComponent {
         RoachComponent(
             roachType: .giant,
-            speed: 2.0,
+            speed: 2.0 * speedMultiplier,
             crushThreshold: 6.0
         )
     }
 
-    static func flying() -> RoachComponent {
+    static func flying(speedMultiplier: Float = 1.0) -> RoachComponent {
         RoachComponent(
             roachType: .flying,
-            speed: 6.0,
+            speed: 6.0 * speedMultiplier,
             crushThreshold: 6.0
         )
     }

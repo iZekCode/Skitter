@@ -120,10 +120,11 @@ enum MysteryBagEntity {
 
     // MARK: - Batch spawn
 
-    /// Spawns 5 bags: 1 baygon, 4 bait, randomly placed
-    static func spawnAll(in parent: Entity) {
-        let positions = generatePositions(count: 5)
-        let types: [BagType] = [.baygon, .bait, .bait, .bait, .bait].shuffled()
+    /// Spawns bags: 1 baygon + (totalBags-1) bait, randomly placed
+    static func spawnAll(in parent: Entity, totalBags: Int = 5) {
+        let positions = generatePositions(count: totalBags)
+        var types: [BagType] = [.baygon] + Array(repeating: .bait, count: max(0, totalBags - 1))
+        types.shuffle()
 
         for (i, pos) in positions.enumerated() {
             let bag      = create(at: pos, type: types[i])

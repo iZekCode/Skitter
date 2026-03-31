@@ -23,6 +23,10 @@ struct GameView: View {
     @State private var assetsLoading            = true
     @State private var hudCameraYaw: Float      = .pi
 
+    private var difficulty: DifficultySettings {
+        DifficultySettings.settings(for: appState.selectedDifficulty)
+    }
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -130,7 +134,7 @@ struct GameView: View {
                 HStack(spacing: 10) {
                     statCard(title: "RESULT",      value: gameState.isWin ? "WIN" : "LOSE")
                     statCard(title: "SURVIVED",    value: gameState.formattedTime)
-                    statCard(title: "BAGS OPENED", value: "\(5 - gameState.bagsRemaining)/5")
+                    statCard(title: "BAGS OPENED", value: "\(difficulty.totalBags - gameState.bagsRemaining)/\(difficulty.totalBags)")
                 }
                 .frame(maxWidth: 600)
 
@@ -139,7 +143,7 @@ struct GameView: View {
                         appState.endGame(
                             survivedTime: gameState.elapsedTime,
                             isWin:        gameState.isWin,
-                            bagsOpened:   5 - gameState.bagsRemaining
+                            bagsOpened:   difficulty.totalBags - gameState.bagsRemaining
                         )
                     } label: {
                         Text("MENU")
@@ -298,7 +302,7 @@ struct GameView: View {
         RoachComponent.registerComponent()
         MysteryBagComponent.registerComponent()
 
-        gameState.startGame()
+        gameState.startGame(totalBags: difficulty.totalBags)
         audioManager.startMusic()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -317,9 +321,12 @@ struct GameView: View {
             puddleSystem = PuddleSystem(scene: scene)
             
             if let arenaRoot = playerEntity?.parent {
-                MysteryBagEntity.spawnAll(in: arenaRoot)
+                MysteryBagEntity.spawnAll(in: arenaRoot, totalBags: difficulty.totalBags)
                 
-                escalationSystem = EscalationSystem(gameState: gameState, roachParent: arenaRoot, audioManager: audioManager)
+                escalationSystem = EscalationSystem(
+                    gameState: gameState, roachParent: arenaRoot,
+                    audioManager: audioManager, difficulty: difficulty
+                )
                 
                 bagTriggerSystem = BagTriggerSystem(
                     scene: scene, gameState: gameState,
@@ -339,21 +346,21 @@ struct GameView: View {
     private func spawnInitialRoaches() {
         guard let root = playerEntity?.parent else { return }
         let playerPos = playerEntity?.position(relativeTo: nil)
-        for _ in 0..<2 {
+        for _ in 0..<difficulty.initialRoachCount {
             let pos = RoachEntity.randomEdgePosition(avoidingPosition: playerPos)
-            let roach = RoachEntity.createChaser(at: pos)
+            let roach = RoachEntity.createChaser(at: pos, speedMultiplier: difficulty.roachSpeedMultiplier)
             root.addChild(roach)
             audioManager.addRoach(roach)
         }
     }
 
     private func startRoachSpawning() {
-        roachSpawnTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+        roachSpawnTimer = Timer.scheduledTimer(withTimeInterval: difficulty.roachSpawnInterval, repeats: true) { _ in
             guard !gameState.isGameOver else { roachSpawnTimer?.invalidate(); return }
             guard let root = playerEntity?.parent else { return }
             let playerPos = playerEntity?.position(relativeTo: nil)
             let pos = RoachEntity.randomEdgePosition(avoidingPosition: playerPos)
-            let roach = RoachEntity.createChaser(at: pos)
+            let roach = RoachEntity.createChaser(at: pos, speedMultiplier: difficulty.roachSpeedMultiplier)
             root.addChild(roach)
             audioManager.addRoach(roach)
         }

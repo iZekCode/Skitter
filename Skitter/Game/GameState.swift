@@ -32,10 +32,11 @@ class GameState {
         return String(format: "%02d:%02d.%02d", minutes, seconds, milliseconds)
     }
 
-    func startGame() {
+    func startGame(totalBags: Int = 5) {
         gamePhase = .playing
         elapsedTime = 0
         isGameOver = false
+        bagsRemaining = totalBags
         startDate = Date()
 
         gameTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
