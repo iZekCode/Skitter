@@ -149,7 +149,7 @@ enum ArenaBuilder {
                    ?? MeshResource.generatePlane(width: arenaSize, depth: arenaSize)
 
         var mat = UnlitMaterial()
-        let tint = UIColor(red: 0.35, green: 0.28, blue: 0.18, alpha: 1.0)
+        let tint = UIColor(red: 122/255, green: 97/255, blue: 62/255, alpha: 1.0)
         if let tex = floorTexture {
             mat.color = .init(tint: tint, texture: .init(tex))
         } else {

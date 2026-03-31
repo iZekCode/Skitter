@@ -23,16 +23,17 @@ struct MainMenuView: View {
                 Spacer()
 
                 // Logo section
-                VStack(spacing: 8) {
+                VStack(spacing: 12) {
                     Text("SKITTER")
-                        .font(.system(size: 42, weight: .black, design: .monospaced))
+                        .font(.system(size: 54, weight: .black, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.9))
                         .kerning(16)
 
-                    Text("SURVIVE THE SWARM")
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.25))
-                        .kerning(6)
+                    Text("Among five black plastic bags, only one contains BYEGONE.\nOpen the wrong plastic bag… and you’ll attract them.\nFind the right one before they get you.")
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.4))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
                 }
 
                 Spacer()
@@ -42,7 +43,7 @@ struct MainMenuView: View {
                     VStack(spacing: 6) {
                         Text("BEST RUN")
                             .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(.white.opacity(0.3))
+                            .foregroundStyle(.white.opacity(0.5))
                             .kerning(3)
 
                         Text(formatTime(appState.bestWinTime))
@@ -51,7 +52,7 @@ struct MainMenuView: View {
 
                         Text("\(appState.bestBagsOpened)/5 BAGS OPENED")
                             .font(.system(size: 10, weight: .medium, design: .monospaced))
-                            .foregroundStyle(.white.opacity(0.25))
+                            .foregroundStyle(.white.opacity(0.5))
                             .kerning(2)
                     }
                 }

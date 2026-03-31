@@ -10,13 +10,15 @@ class BagTriggerLabelState {
     var message:   String = ""
     var isVisible: Bool   = false
     var isWin:     Bool   = false
+    var isBait:    Bool   = false
 
     private var hideTask: DispatchWorkItem?
 
-    func show(message: String, isWin: Bool) {
+    func show(message: String, isWin: Bool, isBait: Bool = false) {
         hideTask?.cancel()
         self.message   = message
         self.isWin     = isWin
+        self.isBait    = isBait
         self.isVisible = true
 
         let task = DispatchWorkItem { [weak self] in
@@ -110,7 +112,7 @@ class BagTriggerSystem {
 
         case .bait:
             gameState.baitTriggeredCount += 1
-            labelState.show(message: "FOOD PILE", isWin: false)
+            labelState.show(message: "FOOD PILE", isWin: false, isBait: true)
             hapticManager?.playBaitTrigger()
             audioManager?.playWrong()
 

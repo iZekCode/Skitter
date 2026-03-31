@@ -32,11 +32,19 @@ struct TriggerLabelView: View {
                         )
                 }
 
-                // Label text 
+                // Label text
                 Text(labelState.message)
                     .font(.system(size: 22, weight: .black, design: .monospaced))
                     .foregroundStyle(accentColor)
                     .kerning(4)
+
+                // Bait hint
+                if labelState.isBait {
+                    Text("Find another plastic bag!")
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundStyle(Color.white.opacity(0.6))
+                        .kerning(1)
+                }
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 14)

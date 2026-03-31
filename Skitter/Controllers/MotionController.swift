@@ -18,7 +18,7 @@ class MotionController: ObservableObject {
     // MARK: - Tuning
 
     let moveSensitivity: Float = 18.0
-    let maxSpeed:        Float = 20.0
+    let maxSpeed:        Float = 10.0
     let moveSmoothing:   Float = 0.18
     let lookSensitivity: Float = 0.005
 
